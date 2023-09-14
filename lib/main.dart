@@ -18,9 +18,8 @@ class Application extends StatelessWidget {
       ),
       initialRoute: '/home',
       routes: {
-      	'/home': (context) => const HomeScreen(),
+        '/home': (context) => HomeScreen(),
       },
     );
   }
 }
-
