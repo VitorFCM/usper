@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_user.dart';
+import 'package:usper/core/classes/class_vehicle.dart';
+import 'package:usper/widgets/avl_ride_card.dart';
 import 'package:usper/widgets/page_title.dart';
 import 'package:usper/widgets/user_image.dart';
 
@@ -9,6 +13,14 @@ class HomeScreen extends StatelessWidget {
 
   final User u = User("Vitor", "Favrin Carrera Miguel", "",
       "https://www.readersdigest.ca/wp-content/uploads/2019/11/cat-10-e1573844975155.jpg");
+
+  RideData r = RideData(
+      originName: "Engcomp",
+      destName: "IFSC",
+      originCoord: LatLng(0.0, 0.0),
+      destCoord: LatLng(0.0, 0.0),
+      departTime: DateTime.now(),
+      vehicle: Vehicle(4, "Corsa", "ABC-7777", "red"));
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +64,8 @@ class HomeScreen extends StatelessWidget {
                 "Caronas disponíveis",
                 style: TextStyle(
                     color: white, fontSize: 15, fontWeight: FontWeight.bold),
-              )
+              ),
+              avaibleRides()
             ],
           ),
         )),
@@ -86,8 +99,15 @@ class HomeScreen extends StatelessWidget {
           minimumSize: Size(MediaQuery.of(context).size.width, 50)),
       child: const Text(
         'Oferecer carona',
-        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        style: TextStyle(color: Colors.black, fontWeight: FontWeight.w300),
       ),
     );
+  }
+
+  Widget avaibleRides() {
+    //Future implementation of BlocBuilder
+    return GestureDetector(
+        onTap: () => {print("Toque")},
+        child: AvlRideCard(user: u, rideData: r));
   }
 }
