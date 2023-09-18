@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_user.dart';
+import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/ride_info.dart';
 import 'package:usper/widgets/user_image.dart';
 
@@ -14,10 +15,12 @@ class AcceptRideDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double dialogWidth = MediaQuery.of(context).size.width;
+    double dialogWidth = MediaQuery.of(context).size.width * 0.3;
     const double infoFontSize = 15;
 
     return AlertDialog(
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12.0))),
       backgroundColor: lighterBlue,
       actions: [acceptRideButton(context)],
       content: Column(
@@ -37,37 +40,41 @@ class AcceptRideDialog extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(color: white, fontSize: 15)),
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              RideInfo(
-                  type: "Origem",
-                  value: rideData.originName,
-                  maxWidth: dialogWidth * 0.5,
-                  fontSize: infoFontSize),
-              RideInfo(
-                  type: "Destino",
-                  value: rideData.destName,
-                  maxWidth: dialogWidth * 0.5,
-                  fontSize: infoFontSize)
-            ],
-          ),
-          const SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              RideInfo(
-                  type: "Horario",
-                  value: rideData.originName,
-                  maxWidth: dialogWidth * 0.5,
-                  fontSize: infoFontSize),
-              RideInfo(
-                  type: "Destino",
-                  value: rideData.destName,
-                  maxWidth: dialogWidth * 0.5,
-                  fontSize: infoFontSize)
-            ],
-          ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      RideInfo(
+                          type: "Origem",
+                          value: rideData.originName,
+                          maxWidth: dialogWidth,
+                          fontSize: infoFontSize),
+                      RideInfo(
+                          type: "Horario",
+                          value: datetimeToString(rideData.departTime),
+                          maxWidth: dialogWidth,
+                          fontSize: infoFontSize),
+                    ]),
+                Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      RideInfo(
+                          type: "Destino",
+                          value: rideData.destName,
+                          maxWidth: dialogWidth,
+                          fontSize: infoFontSize),
+                      RideInfo(
+                          type: "Vagas",
+                          value: rideData.vehicle.seats.toString(),
+                          maxWidth: dialogWidth,
+                          fontSize: infoFontSize)
+                    ]),
+              ],
+            ),
+          )
         ],
       ),
     );
