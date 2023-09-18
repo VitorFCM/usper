@@ -4,6 +4,7 @@ import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
+import 'package:usper/widgets/accept_ride_dialog.dart';
 import 'package:usper/widgets/avl_ride_card.dart';
 import 'package:usper/widgets/page_title.dart';
 import 'package:usper/widgets/user_image.dart';
@@ -11,10 +12,13 @@ import 'package:usper/widgets/user_image.dart';
 class HomeScreen extends StatelessWidget {
   HomeScreen({Key? key}) : super(key: key);
 
-  final User u = User("Vitor", "Favrin Carrera Miguel", "",
+  final User u = User(
+      "Vitorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+      "Favrin Carrera Miguel",
+      "Engenharia de Computacao",
       "https://www.readersdigest.ca/wp-content/uploads/2019/11/cat-10-e1573844975155.jpg");
 
-  RideData r = RideData(
+  final RideData r = RideData(
       originName: "Engcomp",
       destName: "IFSC",
       originCoord: LatLng(0.0, 0.0),
@@ -65,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                 style: TextStyle(
                     color: white, fontSize: 15, fontWeight: FontWeight.bold),
               ),
-              avaibleRides()
+              avaibleRides(context)
             ],
           ),
         )),
@@ -104,10 +108,15 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget avaibleRides() {
+  Widget avaibleRides(BuildContext context) {
     //Future implementation of BlocBuilder
     return GestureDetector(
-        onTap: () => {print("Toque")},
-        child: AvlRideCard(user: u, rideData: r));
+        onTap: () => {
+              showDialog(
+                  context: context,
+                  builder: (context) =>
+                      AcceptRideDialog(driver: u, rideData: r))
+            },
+        child: AvlRideCard(driver: u, rideData: r));
   }
 }
