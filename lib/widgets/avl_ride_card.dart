@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_user.dart';
+import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/ride_info.dart';
 import 'package:usper/widgets/user_image.dart';
 
@@ -13,7 +14,7 @@ class AvlRideCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double placeMaxWidth = MediaQuery.of(context).size.width * 0.2;
+    double infoMaxWidth = MediaQuery.of(context).size.width * 0.2;
 
     return Container(
         decoration: BoxDecoration(
@@ -28,13 +29,16 @@ class AvlRideCard extends StatelessWidget {
                 UserImage(user: driver, radius: 25),
                 const SizedBox(width: 10),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(
-                    driver.firstName,
-                    style: const TextStyle(
-                        color: white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400),
-                  ),
+                  ConstrainedBox(
+                      constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.5),
+                      child: Text(
+                        driver.firstName,
+                        style: const TextStyle(
+                            color: white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400),
+                      )),
                   Text(
                     rideData.vehicle.licensePlate,
                     style: const TextStyle(
@@ -53,16 +57,15 @@ class AvlRideCard extends StatelessWidget {
                 RideInfo(
                     type: "Origem",
                     value: rideData.originName,
-                    maxWidth: placeMaxWidth),
+                    maxWidth: infoMaxWidth),
                 RideInfo(
                     type: "Destino",
                     value: rideData.destName,
-                    maxWidth: placeMaxWidth),
+                    maxWidth: infoMaxWidth),
                 RideInfo(
                     type: "Horario",
-                    value:
-                        "${rideData.departTime.hour}:${rideData.departTime.minute}",
-                    maxWidth: placeMaxWidth),
+                    value: datetimeToString(rideData.departTime),
+                    maxWidth: infoMaxWidth),
               ],
             )
           ],
