@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_user.dart';
+import 'package:usper/widgets/ride_info.dart';
 import 'package:usper/widgets/user_image.dart';
 
 class AvlRideCard extends StatelessWidget {
-  final User user;
+  final User driver;
   final RideData rideData;
 
-  AvlRideCard({Key? key, required this.user, required this.rideData})
-      : super(key: key);
+  const AvlRideCard({super.key, required this.driver, required this.rideData});
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +25,11 @@ class AvlRideCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                UserImage(user: user, radius: 25),
+                UserImage(user: driver, radius: 25),
                 const SizedBox(width: 10),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(
-                    user.firstName,
+                    driver.firstName,
                     style: const TextStyle(
                         color: white,
                         fontSize: 15,
@@ -50,30 +50,21 @@ class AvlRideCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                rideInfo("Origem", rideData.originName, placeMaxWidth),
-                rideInfo("Destino", rideData.destName, placeMaxWidth),
-                rideInfo(
-                    "Horario",
-                    "${rideData.departTime.hour}:${rideData.departTime.minute}",
-                    placeMaxWidth),
+                RideInfo(
+                    type: "Origem",
+                    value: rideData.originName,
+                    maxWidth: placeMaxWidth),
+                RideInfo(
+                    type: "Destino",
+                    value: rideData.destName,
+                    maxWidth: placeMaxWidth),
+                RideInfo(
+                    type: "Horario",
+                    value:
+                        "${rideData.departTime.hour}:${rideData.departTime.minute}",
+                    maxWidth: placeMaxWidth),
               ],
             )
-          ],
-        ));
-  }
-
-  Widget rideInfo(String type, String place, double maxWidth) {
-    const double fontSize = 10;
-
-    return ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: maxWidth,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(type, style: TextStyle(color: yellow, fontSize: fontSize)),
-            Text(place, style: TextStyle(color: white, fontSize: fontSize))
           ],
         ));
   }
