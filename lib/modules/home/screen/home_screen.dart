@@ -6,6 +6,7 @@ import 'package:usper/core/classes/class_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/widgets/accept_ride_dialog.dart';
 import 'package:usper/widgets/avl_ride_card.dart';
+import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/page_title.dart';
 import 'package:usper/widgets/user_image.dart';
 
@@ -13,10 +14,10 @@ class HomeScreen extends StatelessWidget {
   HomeScreen({Key? key}) : super(key: key);
 
   final User u = User(
-      "Vitorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+      "Vitor",
       "Favrin Carrera Miguel",
       "Engenharia de Computacao",
-      "https://www.readersdigest.ca/wp-content/uploads/2019/11/cat-10-e1573844975155.jpg");
+      "https://images.trustinnews.pt/uploads/sites/5/2019/10/o-que-nunca-se-deve-fazer-a-um-gato-2.jpeg");
 
   final RideData r = RideData(
       originName: "Engcomp",
@@ -38,43 +39,33 @@ class HomeScreen extends StatelessWidget {
       titleOcupation -= screenOcupation - MediaQuery.of(context).size.width;
     }
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: blue,
-        body: SingleChildScrollView(
-            child: Padding(
-          padding: const EdgeInsets.only(
-              top: 30, left: lateralPadding, right: lateralPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: titleOcupation),
-                    child:
-                        PageTitle(title: "Para onde\nvamos, ${u.firstName} ?"),
-                  ),
-                  UserImage(user: u, radius: imgRadius)
-                ],
-              ),
-              const SizedBox(height: 20),
-              textFormField(),
-              const SizedBox(height: 50),
-              rideCreationButton(context),
-              const SizedBox(height: 50),
-              const Text(
-                "Caronas disponíveis",
-                style: TextStyle(
-                    color: white, fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              avaibleRides(context)
-            ],
-          ),
-        )),
-      ),
-    );
+    return BaseScreen(
+        child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: titleOcupation),
+              child: PageTitle(title: "Para onde\nvamos, ${u.firstName} ?"),
+            ),
+            UserImage(user: u, radius: imgRadius)
+          ],
+        ),
+        const SizedBox(height: 20),
+        textFormField(),
+        const SizedBox(height: 50),
+        rideCreationButton(context),
+        const SizedBox(height: 50),
+        const Text(
+          "Caronas disponíveis",
+          style: TextStyle(
+              color: white, fontSize: 15, fontWeight: FontWeight.bold),
+        ),
+        avaibleRides(context)
+      ],
+    ));
   }
 
   TextFormField textFormField() {
@@ -97,7 +88,9 @@ class HomeScreen extends StatelessWidget {
 
   TextButton rideCreationButton(BuildContext context) {
     return TextButton(
-      onPressed: () {},
+      onPressed: () {
+        Navigator.pushNamed(context, "/ride_creation");
+      },
       style: TextButton.styleFrom(
           backgroundColor: yellow,
           minimumSize: Size(MediaQuery.of(context).size.width, 50)),
