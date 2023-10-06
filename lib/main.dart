@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:usper/modules/home/screen/home_screen.dart';
+import 'package:usper/modules/ride_creation/screen/ride_creation_screen.dart';
 
 void main() {
   runApp(const Application());
@@ -19,6 +20,7 @@ class Application extends StatelessWidget {
       initialRoute: '/home',
       routes: {
         '/home': (context) => HomeScreen(),
+        '/ride_creation': (context) => const RideCreationScreen(),
       },
     );
   }
