@@ -12,8 +12,7 @@ class BaseScreen extends StatelessWidget {
         child: Scaffold(
       backgroundColor: blue,
       body: SingleChildScrollView(
-        padding: EdgeInsets.only(
-            top: 30, left: lateralPadding, right: lateralPadding),
+        padding: EdgeInsets.only(left: lateralPadding, right: lateralPadding),
         child: child,
       ),
     ));
