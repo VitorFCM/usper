@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:usper/modules/home/screen/home_screen.dart';
 import 'package:usper/modules/ride_creation/screen/ride_creation_screen.dart';
+import 'package:usper/modules/waiting_room/screen/waiting_room_screen.dart';
 
 void main() {
   runApp(const Application());
@@ -17,10 +18,12 @@ class Application extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
+      debugShowCheckedModeBanner: false,
       initialRoute: '/home',
       routes: {
         '/home': (context) => HomeScreen(),
         '/ride_creation': (context) => const RideCreationScreen(),
+        '/waiting_room': (context) => WaitingRoomScreen(),
       },
     );
   }
