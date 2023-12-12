@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/modules/ride_creation/controller/ride_creation_controller.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/page_title.dart';
 
@@ -9,6 +11,7 @@ class RideCreationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double titleOcupation = MediaQuery.of(context).size.width * 0.68;
+    int seatsCounter = 0;
 
     return BaseScreen(
         child: Column(
@@ -51,17 +54,32 @@ class RideCreationScreen extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 IconButton(
-                                    onPressed: () => {print("menos")},
+                                    onPressed: () {
+                                      BlocProvider.of<RideCreationController>(
+                                              context)
+                                          .add(const SeatsCounterDecreased());
+                                    },
                                     icon: const Icon(
                                       Icons.remove_rounded,
                                       color: white,
                                     )),
-                                Text(
-                                  "0",
-                                  style: TextStyle(color: white),
-                                ),
+                                BlocBuilder<RideCreationController,
+                                        RideCreationState>(
+                                    builder: (context, state) {
+                                  if (state is SeatsCounterNewValue) {
+                                    seatsCounter = state.seats;
+                                  }
+                                  return Text(
+                                    "${seatsCounter}",
+                                    style: const TextStyle(color: white),
+                                  );
+                                }),
                                 IconButton(
-                                    onPressed: () => {print("mais")},
+                                    onPressed: () {
+                                      BlocProvider.of<RideCreationController>(
+                                              context)
+                                          .add(const SeatsCounterIncreased());
+                                    },
                                     icon: const Icon(
                                       Icons.add_rounded,
                                       color: white,
