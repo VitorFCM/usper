@@ -101,8 +101,14 @@ class RideCreationScreen extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                         flex: 2,
-                        child: button("Criar carona", Colors.black, 150,
-                            () => print("oi"), yellow)),
+                        child: button(
+                            "Criar carona",
+                            Colors.black,
+                            150,
+                            () => print("Apertou")
+                                /*BlocProvider.of<RideCreationController>(context)
+                                    .add(const RideCreationFinished())*/,
+                            yellow)),
                   ],
                 )
               ],

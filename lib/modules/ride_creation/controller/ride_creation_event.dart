@@ -11,3 +11,10 @@ final class SeatsCounterIncreased extends RideCreationEvent {
 final class SeatsCounterDecreased extends RideCreationEvent {
   const SeatsCounterDecreased();
 }
+
+final class RideCreationFinished extends RideCreationEvent {
+  const RideCreationFinished(this.originName, this.destName);
+
+  final String? originName;
+  final String? destName;
+}
