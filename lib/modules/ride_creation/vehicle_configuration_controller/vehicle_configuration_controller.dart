@@ -1,29 +1,26 @@
+import 'dart:ui';
+
 import 'package:bloc/bloc.dart';
-import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:usper/constants/datatbase_tables.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
+import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
 import 'package:usper/utils/database/fetch_data.dart';
 import 'package:usper/utils/database/insert_data.dart';
-import 'package:usper/utils/displayable_address.dart';
 import 'package:usper/utils/vehicles_requests/get_reference_table.dart';
 import 'package:usper/utils/vehicles_requests/get_vehicles_makers.dart';
 import 'package:usper/utils/vehicles_requests/get_vehicles_models.dart';
 
-part 'ride_creation_event.dart';
-part 'ride_creation_state.dart';
+part 'vehicle_configuration_event.dart';
+part 'vehicle_configuration_state.dart';
 
-class RideCreationController
-    extends Bloc<RideCreationEvent, RideCreationState> {
-  RideCreationController() : super(const SeatsCounterNewValue(0)) {
+class VehicleConfigurationController
+    extends Bloc<VehicleConfigurationEvent, VehicleConfigurationState> {
+  VehicleConfigurationController(this.rideCreationController)
+      : super(const SeatsCounterNewValue(0)) {
     on<SeatsCounterIncreased>(_increaseSeatsCounter);
     on<SeatsCounterDecreased>(_decreaseSeatsCounter);
-    on<SetDepartureTime>(_setDepartureTime);
-    on<SetOriginData>(_setOriginData);
-    on<SetDestinationData>(_setDestinationData);
     on<SetVehicleColor>(_setVehicleColor);
     on<VehicleDataReady>(_verifyVehicleData);
     on<RetrieveVehiclesList>(_retrieveVehiclesList);
@@ -33,12 +30,11 @@ class RideCreationController
     on<VehicleModelSelected>(_setVehicleModel);
   }
 
+  RideCreationController rideCreationController;
+
   int _seatsCounter = 0;
   final int _maxNumberOfSeats =
       4; //In the future, a better implementation shoud be proposed
-  DateTime? departTime;
-  PickedData? originData;
-  PickedData? destData;
   Vehicle? vehicle;
   String? vehicleColorName;
   Map<String, int?>? carsMakers;
@@ -47,9 +43,9 @@ class RideCreationController
   String? vehicleModel;
 
   void _increaseSeatsCounter(
-      SeatsCounterIncreased event, Emitter<RideCreationState> emit) {
+      SeatsCounterIncreased event, Emitter<VehicleConfigurationState> emit) {
     if (_seatsCounter == _maxNumberOfSeats) {
-      emit(RideCreationStateError(
+      emit(VehicleConfigurationStateError(
           "O número máximo de vagas desse veículo é ${_maxNumberOfSeats}"));
     } else {
       _seatsCounter++;
@@ -58,9 +54,9 @@ class RideCreationController
   }
 
   void _decreaseSeatsCounter(
-      SeatsCounterDecreased event, Emitter<RideCreationState> emit) {
+      SeatsCounterDecreased event, Emitter<VehicleConfigurationState> emit) {
     if (_seatsCounter == 0) {
-      emit(const RideCreationStateError(
+      emit(const VehicleConfigurationStateError(
           "Não é possível ter um valor negativo de assentos"));
     } else {
       _seatsCounter--;
@@ -68,71 +64,43 @@ class RideCreationController
     }
   }
 
-  void _setDepartureTime(
-      SetDepartureTime event, Emitter<RideCreationState> emit) {
-    departTime = event.departTime;
-    emit(DepartureTimeSetted(departTime!));
-  }
-
-  void _setOriginData(SetOriginData event, Emitter<RideCreationState> emit) {
-    print(event.locationData.latLong.latitude);
-    print(event.locationData.latLong.longitude);
-    print(event.locationData.addressData);
-    print(event.locationData.addressData['country']);
-
-    originData = event.locationData;
-
-    emit(OriginLocationSetted(displayableAddress(originData!.addressData),
-        _latLongToLatLng(originData!.latLong)));
-  }
-
-  void _setDestinationData(
-      SetDestinationData event, Emitter<RideCreationState> emit) {
-    destData = event.locationData;
-    emit(DestLocationSetted(displayableAddress(destData!.addressData),
-        _latLongToLatLng(destData!.latLong)));
-  }
-
-  LatLng _latLongToLatLng(LatLong location) {
-    return LatLng(location.latitude, location.longitude);
-  }
-
   void _setVehicleColor(
-      SetVehicleColor event, Emitter<RideCreationState> emit) {
+      SetVehicleColor event, Emitter<VehicleConfigurationState> emit) {
     vehicleColorName = event.colorName;
     emit(VehicleColorSetted(event.vehicleColor, event.colorName));
   }
 
   void _verifyVehicleData(
-      VehicleDataReady event, Emitter<RideCreationState> emit) async {
+      VehicleDataReady event, Emitter<VehicleConfigurationState> emit) async {
     UsperUser? driver = event.driver;
 
     if (_seatsCounter == 0) {
-      emit(
-          const RideCreationStateError("O número de vagas deve ser aumentado"));
+      emit(const VehicleConfigurationStateError(
+          "O número de vagas deve ser aumentado"));
     } else if (event.vehiclePlate.isEmpty) {
-      emit(const RideCreationStateError(
+      emit(const VehicleConfigurationStateError(
           "É necessário fornecer a placa do veículo"));
     } else if (vehicleColorName?.isEmpty ?? true) {
-      emit(const RideCreationStateError(
+      emit(const VehicleConfigurationStateError(
           "É necessário fornecer a cor do veículo"));
     } else if (vehicleModel?.isEmpty ?? true) {
-      emit(const RideCreationStateError(
+      emit(const VehicleConfigurationStateError(
           "É necessário fornecer o modelo do veículo"));
     } else if (driver == null) {
-      emit(const RideCreationStateError(
+      emit(const VehicleConfigurationStateError(
           "Ocorreu um erro com o seu login, por favor feche o aplicativo e tente novamente"));
     } else {
       vehicle = Vehicle(
           _seatsCounter, vehicleModel!, event.vehiclePlate, vehicleColorName!);
       await _insertVehicleDatabase(vehicle!, driver);
       _clearData();
-      emit(RideVehicleDefined(vehicle!));
+      rideCreationController.add(VehicleRideChosed(vehicle!));
+      emit(VehicleDefined());
     }
   }
 
-  Future<void> _retrieveVehiclesList(
-      RetrieveVehiclesList event, Emitter<RideCreationState> emit) async {
+  Future<void> _retrieveVehiclesList(RetrieveVehiclesList event,
+      Emitter<VehicleConfigurationState> emit) async {
     List<Map<String, dynamic>> rawList = await fetchData(
         DatabaseTables.vehicles, {"owner_email": event.driverEmail});
 
@@ -142,14 +110,17 @@ class RideCreationController
         .toList()));
   }
 
-  void _setRideVehicle(VehicleChosed event, Emitter<RideCreationState> emit) {
+  void _setRideVehicle(
+      VehicleChosed event, Emitter<VehicleConfigurationState> emit) {
     vehicle = event.vehicle;
 
-    emit(RideVehicleDefined(vehicle!));
+    rideCreationController.add(VehicleRideChosed(vehicle!));
+
+    emit(VehicleDefined());
   }
 
-  Future<void> _retrieveVehicleMakers(
-      VehicleTypeSwitched event, Emitter<RideCreationState> emit) async {
+  Future<void> _retrieveVehicleMakers(VehicleTypeSwitched event,
+      Emitter<VehicleConfigurationState> emit) async {
     isCar = event.isCar;
     Map<String, int?>? vehiclesMakers = isCar ? carsMakers : motorcyclesMakers;
 
@@ -166,14 +137,14 @@ class RideCreationController
         isCar, vehiclesMakers?.keys.toList() ?? ["Sem marcas"]));
   }
 
-  Future<void> _retrieveVehicleModels(
-      VehicleMakerSelected event, Emitter<RideCreationState> emit) async {
+  Future<void> _retrieveVehicleModels(VehicleMakerSelected event,
+      Emitter<VehicleConfigurationState> emit) async {
     int? makerCode = isCar
         ? carsMakers![event.vehicleMaker]
         : motorcyclesMakers![event.vehicleMaker];
 
     if (makerCode == null) {
-      emit(const RideCreationStateError(
+      emit(const VehicleConfigurationStateError(
           "Não foi possível obter a lista de modelos. Vamos utilizar apenas o fabricante"));
     } else {
       emit(VehicleModelsRetrieved(await getVehiclesModels(
@@ -182,7 +153,7 @@ class RideCreationController
   }
 
   void _setVehicleModel(
-      VehicleModelSelected event, Emitter<RideCreationState> emit) {
+      VehicleModelSelected event, Emitter<VehicleConfigurationState> emit) {
     vehicleModel = event.vehicleModel;
     emit(VehicleModelDefined());
   }
@@ -203,9 +174,6 @@ class RideCreationController
 
   void _clearData() {
     _seatsCounter = 0;
-    departTime = null;
-    originData = null;
-    destData = null;
     vehicleColorName = null;
     vehicleModel = null;
   }

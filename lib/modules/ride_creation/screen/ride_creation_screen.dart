@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:usper/constants/colors_constants.dart';
-import 'package:usper/modules/ride_creation/controller/ride_creation_controller.dart';
+import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/expandable_map_widget.dart';
 import 'package:usper/widgets/base_screen.dart';
@@ -102,8 +102,7 @@ class RideCreationScreen extends StatelessWidget {
                                 BlocBuilder<RideCreationController,
                                         RideCreationState>(
                                     buildWhen: (previous, current) {
-                                  return current is SeatsCounterNewValue ||
-                                      current is RideVehicleDefined;
+                                  return current is RideVehicleDefined;
                                 }, builder: (context, state) {
                                   if (state is RideVehicleDefined) {
                                     return Text(

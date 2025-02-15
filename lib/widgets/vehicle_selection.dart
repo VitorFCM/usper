@@ -4,7 +4,7 @@ import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
-import 'package:usper/modules/ride_creation/controller/ride_creation_controller.dart';
+import 'package:usper/modules/ride_creation/vehicle_configuration_controller/vehicle_configuration_controller.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
 import 'package:usper/widgets/vehicle_input_alert_dialog.dart';
 
@@ -13,9 +13,10 @@ class VehicleSelection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<RideCreationController, RideCreationState>(
+    return BlocListener<VehicleConfigurationController,
+        VehicleConfigurationState>(
       listener: (context, state) {
-        if (state is RideCreationStateError) {
+        if (state is VehicleConfigurationStateError) {
           showDialog(
               context: context,
               builder: (context) =>
@@ -60,7 +61,7 @@ class VehicleSelection extends StatelessWidget {
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                   color: blue,
                 ),
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(5, 10, 5, 10),
                 height: 160,
                 width: MediaQuery.of(context).size.width,
                 child: vehiclesList(context),
@@ -71,32 +72,29 @@ class VehicleSelection extends StatelessWidget {
   }
 
   Widget vehiclesList(BuildContext context) {
-    RideCreationController rideCreationController =
-        BlocProvider.of<RideCreationController>(context);
+    VehicleConfigurationController vehicleConfigurationController =
+        BlocProvider.of<VehicleConfigurationController>(context);
 
     UsperUser? driver = BlocProvider.of<LoginController>(context).user;
 
-    rideCreationController.add(RetrieveVehiclesList(driver!.email));
+    vehicleConfigurationController.add(RetrieveVehiclesList(driver!.email));
 
     ScrollController controller = ScrollController(
         initialScrollOffset: 1 * MediaQuery.of(context).size.width / 2);
 
-    return BlocBuilder<RideCreationController, RideCreationState>(
-        buildWhen: (previous, current) {
+    return BlocBuilder<VehicleConfigurationController,
+        VehicleConfigurationState>(buildWhen: (previous, current) {
       return current is VehiclesListRetrieved;
     }, builder: (context, state) {
       List<Widget> vehiclesCardsList = state is VehiclesListRetrieved
           ? state.vehiclesList
-              .map((vehicle) =>
-                  vehicleCard(vehicle, rideCreationController, context))
+              .map((vehicle) => Padding(
+                    padding: const EdgeInsets.only(left: 5, right: 5),
+                    child: vehicleCard(
+                        vehicle, vehicleConfigurationController, context),
+                  ))
               .toList()
           : [Text("Sem veiculos registrados")];
-
-      int vehiclesCardsListLen = vehiclesCardsList.length;
-
-      for (int i = 1; i <= vehiclesCardsListLen + 1; i += 2) {
-        vehiclesCardsList.insert(i, Container(width: 10));
-      }
 
       return ListView(
         controller: controller,
@@ -106,11 +104,13 @@ class VehicleSelection extends StatelessWidget {
     });
   }
 
-  Widget vehicleCard(Vehicle vehicle,
-      RideCreationController rideCreationController, BuildContext context) {
+  Widget vehicleCard(
+      Vehicle vehicle,
+      VehicleConfigurationController vehicleConfigurationController,
+      BuildContext context) {
     return GestureDetector(
         onTap: () {
-          rideCreationController.add(VehicleChosed(vehicle));
+          vehicleConfigurationController.add(VehicleChosed(vehicle));
           Navigator.pop(context);
         },
         child: Container(
@@ -118,7 +118,7 @@ class VehicleSelection extends StatelessWidget {
             borderRadius: BorderRadius.all(Radius.circular(10)),
             color: yellow,
           ),
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           child: Text(vehicle.licensePlate),
         ));
   }

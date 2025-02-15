@@ -5,7 +5,7 @@ import 'package:pinput/pinput.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
-import 'package:usper/modules/ride_creation/controller/ride_creation_controller.dart';
+import 'package:usper/modules/ride_creation/vehicle_configuration_controller/vehicle_configuration_controller.dart';
 import 'package:usper/utils/get_nearest_color_name.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
 
@@ -17,19 +17,20 @@ class VehicleInputAlertDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    RideCreationController rideCreationController =
-        BlocProvider.of<RideCreationController>(context);
+    VehicleConfigurationController vehicleConfigurationController =
+        BlocProvider.of<VehicleConfigurationController>(context);
 
     TextEditingController plateController = TextEditingController();
 
-    return BlocListener<RideCreationController, RideCreationState>(
+    return BlocListener<VehicleConfigurationController,
+        VehicleConfigurationState>(
       listener: (context, state) {
-        if (state is RideCreationStateError) {
+        if (state is VehicleConfigurationStateError) {
           showDialog(
               context: context,
               builder: (context) =>
                   ErrorAlertDialog(errorMessage: state.errorMessage));
-        } else if (state is RideVehicleDefined) {
+        } else if (state is VehicleDefined) {
           Navigator.pop(context);
         }
       },
@@ -60,21 +61,21 @@ class VehicleInputAlertDialog extends StatelessWidget {
                   children: [
                     colorSelectorSection(context),
                     const SizedBox(width: 10),
-                    seatsCounterSection(rideCreationController),
+                    seatsCounterSection(vehicleConfigurationController),
                   ],
                 ),
                 const SizedBox(height: 20),
-                vehicleModelSection(rideCreationController),
+                vehicleModelSection(vehicleConfigurationController),
                 const SizedBox(height: 20),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: vehicleTypeSection(rideCreationController),
+                  child: vehicleTypeSection(vehicleConfigurationController),
                 ),
                 const SizedBox(height: 50),
                 button("Tudo certo!", Colors.black, 180, () {
                   UsperUser? driver =
                       BlocProvider.of<LoginController>(context).user;
-                  rideCreationController
+                  vehicleConfigurationController
                       .add(VehicleDataReady(plateController.text, driver));
                 }, yellow)
               ],
@@ -88,8 +89,8 @@ class VehicleInputAlertDialog extends StatelessWidget {
       onTap: () {
         pickColor(context);
       },
-      child: BlocBuilder<RideCreationController, RideCreationState>(
-          buildWhen: (previous, current) {
+      child: BlocBuilder<VehicleConfigurationController,
+          VehicleConfigurationState>(buildWhen: (previous, current) {
         return current is VehicleColorSetted;
       }, builder: (context, state) {
         Color invertedColor = getInvertedColor(vehicleColor);
@@ -117,7 +118,8 @@ class VehicleInputAlertDialog extends StatelessWidget {
     );
   }
 
-  Widget seatsCounterSection(RideCreationController rideCreationController) {
+  Widget seatsCounterSection(
+      VehicleConfigurationController vehicleConfigurationController) {
     int seatsCounter = 0;
 
     return infoInput(
@@ -128,14 +130,15 @@ class VehicleInputAlertDialog extends StatelessWidget {
           children: [
             IconButton(
                 onPressed: () {
-                  rideCreationController.add(const SeatsCounterDecreased());
+                  vehicleConfigurationController
+                      .add(const SeatsCounterDecreased());
                 },
                 icon: const Icon(
                   Icons.remove_rounded,
                   color: Colors.black,
                 )),
-            BlocBuilder<RideCreationController, RideCreationState>(
-                builder: (context, state) {
+            BlocBuilder<VehicleConfigurationController,
+                VehicleConfigurationState>(builder: (context, state) {
               if (state is SeatsCounterNewValue) {
                 seatsCounter = state.seats;
               }
@@ -146,7 +149,8 @@ class VehicleInputAlertDialog extends StatelessWidget {
             }),
             IconButton(
                 onPressed: () {
-                  rideCreationController.add(const SeatsCounterIncreased());
+                  vehicleConfigurationController
+                      .add(const SeatsCounterIncreased());
                 },
                 icon: const Icon(
                   Icons.add_rounded,
@@ -158,13 +162,14 @@ class VehicleInputAlertDialog extends StatelessWidget {
         160);
   }
 
-  Widget vehicleTypeSection(RideCreationController rideCreationController) {
-    rideCreationController.add(VehicleTypeSwitched(true));
+  Widget vehicleTypeSection(
+      VehicleConfigurationController vehicleConfigurationController) {
+    vehicleConfigurationController.add(VehicleTypeSwitched(true));
 
     return infoInput(
         "Tipo de Veiculo",
         yellow,
-        BlocBuilder<RideCreationController, RideCreationState>(
+        BlocBuilder<VehicleConfigurationController, VehicleConfigurationState>(
             buildWhen: (previous, current) {
           return current is VehicleMakersRetrieved;
         }, builder: (context, state) {
@@ -199,7 +204,8 @@ class VehicleInputAlertDialog extends StatelessWidget {
                   ),
                   onChanged: (bool value) {
                     isCar = !isCar;
-                    rideCreationController.add(VehicleTypeSwitched(isCar));
+                    vehicleConfigurationController
+                        .add(VehicleTypeSwitched(isCar));
                   },
                 ),
               ),
@@ -211,15 +217,16 @@ class VehicleInputAlertDialog extends StatelessWidget {
         width: 120);
   }
 
-  Widget vehicleModelSection(RideCreationController rideCreationController) {
+  Widget vehicleModelSection(
+      VehicleConfigurationController vehicleConfigurationController) {
     return infoInput(
         "Modelo do Veiculo",
         Colors.black,
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            BlocBuilder<RideCreationController, RideCreationState>(
-                buildWhen: (previous, current) {
+            BlocBuilder<VehicleConfigurationController,
+                VehicleConfigurationState>(buildWhen: (previous, current) {
               return current is VehicleMakersRetrieved;
             }, builder: (context, state) {
               List<String> dropdownValues = state is VehicleMakersRetrieved
@@ -228,11 +235,11 @@ class VehicleInputAlertDialog extends StatelessWidget {
               return dropdownMenu(
                   dropdownValues,
                   "Marca",
-                  (String value) =>
-                      rideCreationController.add(VehicleMakerSelected(value)));
+                  (String value) => vehicleConfigurationController
+                      .add(VehicleMakerSelected(value)));
             }),
-            BlocBuilder<RideCreationController, RideCreationState>(
-                buildWhen: (previous, current) {
+            BlocBuilder<VehicleConfigurationController,
+                VehicleConfigurationState>(buildWhen: (previous, current) {
               return current is VehicleModelsRetrieved;
             }, builder: (context, state) {
               List<String> dropdownValues = state is VehicleModelsRetrieved
@@ -241,8 +248,8 @@ class VehicleInputAlertDialog extends StatelessWidget {
               return dropdownMenu(
                   dropdownValues,
                   "Modelo",
-                  (String value) =>
-                      rideCreationController.add(VehicleModelSelected(value)));
+                  (String value) => vehicleConfigurationController
+                      .add(VehicleModelSelected(value)));
             })
           ],
         ),
@@ -328,15 +335,15 @@ class VehicleInputAlertDialog extends StatelessWidget {
                 onColorChanged: (Color color) {
                   vehicleColor = color;
                   colorName = getNearestColorName(vehicleColor);
-                  BlocProvider.of<RideCreationController>(context)
+                  BlocProvider.of<VehicleConfigurationController>(context)
                       .add(SetVehicleColor(vehicleColor, colorName));
                 },
                 showLabel: false,
                 enableAlpha: false,
                 pickerAreaHeightPercent: 0.8,
               ),
-              BlocBuilder<RideCreationController, RideCreationState>(
-                  buildWhen: (previous, current) {
+              BlocBuilder<VehicleConfigurationController,
+                  VehicleConfigurationState>(buildWhen: (previous, current) {
                 return current is VehicleColorSetted;
               }, builder: (context, state) {
                 String colorName = "";

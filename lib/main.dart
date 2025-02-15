@@ -6,9 +6,10 @@ import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/modules/home/screen/home_screen.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/modules/login/screen/login_screen.dart';
-import 'package:usper/modules/ride_creation/controller/ride_creation_controller.dart';
+import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
 import 'package:usper/modules/passengers_selection/passengers_sel_screen.dart';
 import 'package:usper/modules/ride_creation/screen/ride_creation_screen.dart';
+import 'package:usper/modules/ride_creation/vehicle_configuration_controller/vehicle_configuration_controller.dart';
 import 'package:usper/modules/waiting_room/screen/waiting_room_screen.dart';
 import 'package:usper/services/google_auth_supabase_service.dart';
 
@@ -35,7 +36,10 @@ class Application extends StatelessWidget {
           BlocProvider(
               create: (context) =>
                   LoginController(googleAuth: GoogleAuthSupabaseService())),
-          BlocProvider(create: (context) => RideCreationController())
+          BlocProvider(create: (context) => RideCreationController()),
+          BlocProvider(
+              create: (context) => VehicleConfigurationController(
+                  BlocProvider.of<RideCreationController>(context)))
         ],
         child: MaterialApp(
           title: 'Usper',

@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:usper/constants/colors_constants.dart';
-import 'package:usper/modules/ride_creation/controller/ride_creation_controller.dart';
+import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
 
 class ExpandableMapWidget extends StatelessWidget {
   ExpandableMapWidget();
