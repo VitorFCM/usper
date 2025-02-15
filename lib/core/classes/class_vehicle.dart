@@ -1,13 +1,8 @@
-class Vehicle{
-	int seats;
-	String name;
-	String licensePlate;
-	String color;
+class Vehicle {
+  int seats;
+  String model;
+  String licensePlate;
+  String color;
 
-	Vehicle(
-		this.seats,
-		this.name,
-		this.licensePlate,
-		this.color
-	);
+  Vehicle(this.seats, this.model, this.licensePlate, this.color);
 }

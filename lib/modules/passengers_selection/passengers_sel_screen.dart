@@ -11,8 +11,8 @@ import 'package:usper/widgets/page_title.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/widgets/user_image.dart';
 
-class WaitingRoomScreen extends StatelessWidget {
-  WaitingRoomScreen({super.key});
+class PassengersSelScreen extends StatelessWidget {
+  PassengersSelScreen({super.key});
 
   late double _txtInfoMaxWidth;
   static const double lateralPadding = 15;
@@ -40,18 +40,27 @@ class WaitingRoomScreen extends StatelessWidget {
     double passSectionHeight = MediaQuery.of(context).size.height * 0.3;
     if (passSectionHeight >= 400) passSectionHeight = 400;
 
-    _txtInfoMaxWidth = MediaQuery.of(context).size.width * 0.3;
+    _txtInfoMaxWidth = MediaQuery.of(context).size.width - 130;
+    print(MediaQuery.of(context).size.height);
     return BaseScreen(
+      //child: Container(
+      //height: MediaQuery.of(context).size.height * 0.9,
+      //color: Colors.pink,
       child: Column(
+        //mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: titleOcupation),
-            child: PageTitle(title: "Sala de Espera"),
+            child: PageTitle(title: "Seleção de\npassageiros"),
           ),
-          const SizedBox(height: 20),
-          rideInfoCard(u, r, context),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
+          SizedBox(
+            height: 140,
+            width: MediaQuery.of(context).size.width,
+            child: newPassengersList(context),
+          ),
+          const SizedBox(height: 30),
           const Text(
             "Passageiros aprovados",
             style: TextStyle(color: white, fontWeight: FontWeight.bold),
@@ -78,100 +87,109 @@ class WaitingRoomScreen extends StatelessWidget {
               ),
             ),
           ),
+          //const Spacer(),
           Padding(
-            padding: const EdgeInsets.only(top: 120),
+            padding: const EdgeInsets.only(top: 30),
+            child: Align(
+              alignment: Alignment.center,
+              child: button("Iniciar carona", Colors.black, buttonWidth + 50,
+                  () => Navigator.pop(context), yellow, 10),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 15),
             child: Align(
               alignment: Alignment.center,
               child: button("Cancelar", white, buttonWidth,
-                  () => Navigator.pop(context), Colors.black),
+                  () => Navigator.pop(context), Colors.black, 10),
             ),
+          )
+        ],
+        //),
+      ),
+    );
+  }
+
+  Widget newPassengersList(BuildContext context) {
+    ScrollController _controller = ScrollController(
+        initialScrollOffset: 1 * MediaQuery.of(context).size.width / 2);
+
+    return ListView(
+      controller: _controller,
+      children: [
+        passengerSelCard(u),
+        SizedBox(width: 10),
+        passengerSelCard(u),
+        SizedBox(width: 10),
+        passengerSelCard(u),
+        SizedBox(width: 10),
+        passengerSelCard(u),
+        SizedBox(width: 10),
+        passengerSelCard(u),
+        SizedBox(width: 10),
+        passengerSelCard(u),
+      ],
+      scrollDirection: Axis.horizontal,
+    );
+  }
+
+  Widget passengerSelCard(UsperUser passenger) {
+    double cardWidth = 250;
+    double padding = 10;
+    return Container(
+      width: cardWidth,
+      padding: EdgeInsets.all(padding),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: yellow,
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              UserImage(user: passenger, radius: 30),
+              const SizedBox(width: 5),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ConstrainedBox(
+                      constraints:
+                          BoxConstraints(maxWidth: cardWidth - 2 * padding),
+                      child: Text(passenger.firstName,
+                          style: const TextStyle(
+                              color: Colors.black, fontSize: 20))),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: cardWidth),
+                    child: Text(passenger.course,
+                        style:
+                            const TextStyle(color: Colors.black, fontSize: 10)),
+                  ),
+                ],
+              )
+            ],
+          ),
+          SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              button("Recusar", white, 100, () => print("recusou"),
+                  Colors.black, 20),
+              button("Aceitar", Colors.black, 100, () => print("aceitou"),
+                  Colors.green, 20)
+            ],
           )
         ],
       ),
     );
   }
 
-  Widget rideInfoCard(
-      UsperUser driver, RideData rideData, BuildContext context) {
-    const double edgeInsets = 10;
-
-    double destNameWidth =
-        calcTextSize(r.destName, const TextStyle(fontSize: 12)).width;
-
-    double arrowEnd = (destNameWidth < _txtInfoMaxWidth)
-        ? MediaQuery.of(context).size.width -
-            2 * lateralPadding -
-            2 * edgeInsets -
-            20 -
-            calcTextSize(r.originName, const TextStyle(fontSize: 12)).width -
-            destNameWidth
-        : _txtInfoMaxWidth - 20;
-
-    return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: yellow,
-        ),
-        padding: const EdgeInsets.all(edgeInsets),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                UserImage(user: driver, radius: 30),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    textInfo(driver.firstName, Colors.black, 18),
-                    textInfo(driver.course, Colors.black, 12)
-                  ],
-                ),
-                const Spacer(),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.black,
-                  ),
-                  padding: const EdgeInsets.all(edgeInsets),
-                  child: Column(
-                    children: [
-                      textInfo("Partida", white, 13),
-                      textInfo(datetimeToString(r.departTime), white, 12)
-                    ],
-                  ),
-                )
-              ],
-            ),
-            const SizedBox(height: 30),
-            Row(
-              children: [
-                textInfo(r.originName, Colors.black, 12),
-                Expanded(
-                  child: Container(
-                    height: 50,
-                    child: CustomPaint(
-                      painter: Arrow(
-                          p1: const Offset(10, 25), p2: Offset(arrowEnd, 25)),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: textInfo(r.destName, Colors.black, 12),
-                )
-              ],
-            ),
-          ],
-        ));
-  }
-
   TextButton button(String title, Color textColor, double minWidth,
-      VoidCallback onPressedFunction, Color backgroundColor) {
+      VoidCallback onPressedFunction, Color backgroundColor, double radius) {
     return TextButton(
       onPressed: onPressedFunction,
       style: TextButton.styleFrom(
-          shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10))),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(radius))),
           backgroundColor: backgroundColor,
           minimumSize: Size(minWidth, 20)),
       child: Text(

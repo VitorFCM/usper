@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/modules/home/screen/home_screen.dart';
+import 'package:usper/modules/login/controller/login_controller.dart';
+import 'package:usper/modules/login/screen/login_screen.dart';
 import 'package:usper/modules/ride_creation/controller/ride_creation_controller.dart';
+import 'package:usper/modules/passengers_selection/passengers_sel_screen.dart';
 import 'package:usper/modules/ride_creation/screen/ride_creation_screen.dart';
 import 'package:usper/modules/waiting_room/screen/waiting_room_screen.dart';
+import 'package:usper/services/google_auth_supabase_service.dart';
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: ".env");
+
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['ANON_KEY']!,
+  );
+
   runApp(const Application());
 }
 
@@ -14,21 +30,31 @@ class Application extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      debugShowCheckedModeBanner: false,
-      initialRoute: '/home',
-      routes: {
-        '/home': (context) => HomeScreen(),
-        '/ride_creation': (context) => BlocProvider(
-            create: (_) => RideCreationController(),
-            child: const RideCreationScreen()),
-        '/waiting_room': (context) => WaitingRoomScreen(),
-      },
-    );
+    return MultiBlocProvider(
+        providers: [
+          BlocProvider(
+              create: (context) =>
+                  LoginController(googleAuth: GoogleAuthSupabaseService())),
+          BlocProvider(create: (context) => RideCreationController())
+        ],
+        child: MaterialApp(
+          title: 'Usper',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: yellow),
+            useMaterial3: true,
+          ),
+          debugShowCheckedModeBanner: false,
+          initialRoute: '/login',
+          routes: {
+            '/login': (context) => LoginScreen(),
+            '/home': (context) => HomeScreen(),
+            '/ride_creation': (context) => RideCreationScreen(),
+            /*'/ride_creation': (context) => BlocProvider(
+                create: (_) => RideCreationController(),
+                child: RideCreationScreen()),*/
+            '/waiting_room': (context) => WaitingRoomScreen(),
+            '/passengers_selection': (context) => PassengersSelScreen()
+          },
+        ));
   }
 }

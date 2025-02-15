@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:usper/constants/colors_constants.dart';
-import 'package:usper/core/classes/class_user.dart';
+import 'package:usper/core/classes/class_usper_user.dart';
 
 class UserImage extends StatelessWidget {
-  final User user;
+  final UsperUser user;
   final double radius;
   const UserImage({required this.user, required this.radius});
 

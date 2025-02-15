@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
-import 'package:usper/core/classes/class_user.dart';
+import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/ride_info.dart';
 import 'package:usper/widgets/user_image.dart';
 
 class AvlRideCard extends StatelessWidget {
-  final User driver;
+  final UsperUser driver;
   final RideData rideData;
 
   const AvlRideCard({super.key, required this.driver, required this.rideData});
