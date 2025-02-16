@@ -22,7 +22,7 @@ class VehicleConfigurationController
     on<SeatsCounterIncreased>(_increaseSeatsCounter);
     on<SeatsCounterDecreased>(_decreaseSeatsCounter);
     on<SetVehicleColor>(_setVehicleColor);
-    on<VehicleDataReady>(_verifyVehicleData);
+    on<VehicleDataReady>(_createVehicle);
     on<RetrieveVehiclesList>(_retrieveVehiclesList);
     on<VehicleChosed>(_setRideVehicle);
     on<VehicleTypeSwitched>(_retrieveVehicleMakers);
@@ -70,7 +70,7 @@ class VehicleConfigurationController
     emit(VehicleColorSetted(event.vehicleColor, event.colorName));
   }
 
-  void _verifyVehicleData(
+  void _createVehicle(
       VehicleDataReady event, Emitter<VehicleConfigurationState> emit) async {
     UsperUser? driver = event.driver;
 

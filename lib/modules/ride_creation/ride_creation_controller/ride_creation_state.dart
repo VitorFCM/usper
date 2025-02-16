@@ -38,3 +38,9 @@ final class RideVehicleDefined extends RideCreationState {
 
   final Vehicle vehicle;
 }
+
+final class RideCreated extends RideCreationState {
+  const RideCreated();
+}
+
+final class RideDataCleared extends RideCreationState {}

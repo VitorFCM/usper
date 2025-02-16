@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
 import 'package:usper/utils/datetime_to_string.dart';
+import 'package:usper/widgets/error_alert_dialog.dart';
 import 'package:usper/widgets/expandable_map_widget.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/page_title.dart';
@@ -21,143 +23,155 @@ class RideCreationScreen extends StatelessWidget {
     RideCreationController rideCreationController =
         BlocProvider.of<RideCreationController>(context);
 
-    return BaseScreen(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: titleOcupation),
-            child: PageTitle(title: "Criação de\ncarona"),
-          ),
-          const SizedBox(height: 20),
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: lighterBlue,
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  textFormField<SetOriginData, OriginLocationSetted>(
-                      "Origem", rideCreationController, context),
-                  const SizedBox(height: 10),
-                  textFormField<SetDestinationData, DestLocationSetted>(
-                      "Destino", rideCreationController, context),
-                  const SizedBox(height: 20),
-                  ExpandableMapWidget(),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                          //flex: 2,
-                          child: GestureDetector(
-                        onTap: () async {
-                          final TimeOfDay? time =
-                              await _showTimePicker(context);
-                          if (time != null) {
-                            selectedTime = DateTime(
-                                selectedTime.year,
-                                selectedTime.month,
-                                selectedTime.day,
-                                time.hour,
-                                time.minute);
-                          }
-                        },
-                        child: infoInput(
-                            "Horario de Partida",
-                            yellow,
-                            BlocBuilder<RideCreationController,
-                                RideCreationState>(
-                              buildWhen: (previous, current) {
-                                return current is DepartureTimeSetted;
-                              },
-                              builder: (context, state) {
-                                if (state is DepartureTimeSetted) {
-                                  return Text(
-                                      datetimeToString(state.departTime));
-                                } else {
-                                  return Text(datetimeToString(selectedTime));
-                                }
-                              },
-                            ),
-                            Colors.black,
-                            550),
-                      )),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          flex: 1,
-                          child: GestureDetector(
-                            onTap: () {
-                              showDialog(
-                                  context: context,
-                                  builder: (context) => VehicleSelection());
-                            },
-                            child: infoInput(
-                                "Veículo",
-                                Colors.black,
-                                BlocBuilder<RideCreationController,
-                                        RideCreationState>(
-                                    buildWhen: (previous, current) {
-                                  return current is RideVehicleDefined;
-                                }, builder: (context, state) {
-                                  if (state is RideVehicleDefined) {
-                                    return Text(
-                                      state.vehicle.licensePlate,
-                                      style: const TextStyle(color: white),
-                                    );
-                                  }
-                                  return const Icon(
-                                    Icons.airport_shuttle,
-                                    color: white,
-                                    size: 40,
-                                  );
-                                }),
-                                white,
-                                150),
-                          )),
-                    ],
-                  ),
-                ],
-              ),
+    return BlocListener<RideCreationController, RideCreationState>(
+      listener: (context, state) {
+        if (state is RideCreationStateError) {
+          showDialog(
+              context: context,
+              builder: (context) =>
+                  ErrorAlertDialog(errorMessage: state.errorMessage));
+        } else if (state is RideCreated) {
+          Navigator.popAndPushNamed(context, "/passengers_selection");
+        }
+      },
+      child: BaseScreen(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: titleOcupation),
+              child: PageTitle(title: "Criação de\ncarona"),
             ),
-          ),
-          //const SizedBox(height: 50),
-          //const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 15, top: 20),
-            child: Align(
+            const SizedBox(height: 20),
+            Align(
               alignment: Alignment.center,
-              child: button(
-                  "Criar carona",
-                  Colors.black,
-                  MediaQuery.of(context).size.width * 0.8,
-                  () => {
-                        print("Apertou"),
-
-                        /*BlocProvider.of<RideCreationController>(context)
-																	.add(const RideCreationFinished())*/
-                        Navigator.pushNamed(context, "/passengers_selection")
-                      },
-                  yellow),
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: lighterBlue,
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    textFormField<SetOriginData, OriginLocationSetted>(
+                        "Origem", rideCreationController, context),
+                    const SizedBox(height: 10),
+                    textFormField<SetDestinationData, DestLocationSetted>(
+                        "Destino", rideCreationController, context),
+                    const SizedBox(height: 20),
+                    ExpandableMapWidget(),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                            //flex: 2,
+                            child: GestureDetector(
+                          onTap: () async {
+                            final TimeOfDay? time =
+                                await _showTimePicker(context);
+                            if (time != null) {
+                              selectedTime = DateTime(
+                                  selectedTime.year,
+                                  selectedTime.month,
+                                  selectedTime.day,
+                                  time.hour,
+                                  time.minute);
+                              rideCreationController
+                                  .add(SetDepartureTime(selectedTime));
+                            }
+                          },
+                          child: infoInput(
+                              "Horario de Partida",
+                              yellow,
+                              BlocBuilder<RideCreationController,
+                                  RideCreationState>(
+                                buildWhen: (previous, current) {
+                                  return current is DepartureTimeSetted;
+                                },
+                                builder: (context, state) {
+                                  if (state is DepartureTimeSetted) {
+                                    return Text(
+                                        datetimeToString(state.departTime));
+                                  } else {
+                                    return Text(datetimeToString(selectedTime));
+                                  }
+                                },
+                              ),
+                              Colors.black,
+                              550),
+                        )),
+                        const SizedBox(width: 10),
+                        Expanded(
+                            flex: 1,
+                            child: GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                    context: context,
+                                    builder: (context) => VehicleSelection());
+                              },
+                              child: infoInput(
+                                  "Veículo",
+                                  Colors.black,
+                                  BlocBuilder<RideCreationController,
+                                          RideCreationState>(
+                                      buildWhen: (previous, current) {
+                                    return current is RideVehicleDefined;
+                                  }, builder: (context, state) {
+                                    if (state is RideVehicleDefined) {
+                                      return Text(
+                                        state.vehicle.licensePlate,
+                                        style: const TextStyle(color: white),
+                                      );
+                                    }
+                                    return const Icon(
+                                      Icons.airport_shuttle,
+                                      color: white,
+                                      size: 40,
+                                    );
+                                  }),
+                                  white,
+                                  150),
+                            )),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 0),
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: button(
-                  "Cancelar",
-                  white,
-                  MediaQuery.of(context).size.width * 0.5,
-                  () => Navigator.pop(context),
-                  Colors.black),
+            //const SizedBox(height: 50),
+            //const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15, top: 20),
+              child: Align(
+                alignment: Alignment.center,
+                child: button(
+                    "Criar carona",
+                    Colors.black,
+                    MediaQuery.of(context).size.width * 0.8,
+                    () => rideCreationController.add(RideCreationFinished(
+                        BlocProvider.of<LoginController>(context).user)),
+                    yellow),
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.only(bottom: 0),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: button(
+                    "Cancelar",
+                    white,
+                    MediaQuery.of(context).size.width * 0.5,
+                    () => {
+                          rideCreationController.add(RideCanceled()),
+                          Navigator.pop(context)
+                        },
+                    Colors.black),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
