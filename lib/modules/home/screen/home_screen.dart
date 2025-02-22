@@ -6,7 +6,6 @@ import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
-import 'package:usper/widgets/accept_ride_dialog.dart';
 import 'package:usper/widgets/avl_ride_card.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/page_title.dart';
@@ -100,13 +99,10 @@ class HomeScreen extends StatelessWidget {
 
   Widget avaibleRides(BuildContext context, UsperUser driver) {
     //Future implementation of BlocBuilder
-    return GestureDetector(
-        onTap: () => {
-              showDialog(
-                  context: context,
-                  builder: (context) =>
-                      AcceptRideDialog(driver: driver, rideData: r))
-            },
-        child: AvlRideCard(driver: driver, rideData: r));
+    return SingleChildScrollView(
+      child: Column(
+        children: [AvlRideCard(driver: driver, rideData: r)],
+      ),
+    );
   }
 }

@@ -12,6 +12,7 @@ import 'package:usper/modules/ride_creation/screen/ride_creation_screen.dart';
 import 'package:usper/modules/ride_creation/vehicle_configuration_controller/vehicle_configuration_controller.dart';
 import 'package:usper/modules/waiting_room/screen/waiting_room_screen.dart';
 import 'package:usper/services/google_auth_supabase_service.dart';
+import 'package:usper/services/supabase_service.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -34,12 +35,17 @@ class Application extends StatelessWidget {
     return MultiBlocProvider(
         providers: [
           BlocProvider(
+              create: (context) => LoginController(
+                  googleAuth: GoogleAuthSupabaseService(),
+                  repositoryService: SupabaseService())),
+          BlocProvider(
               create: (context) =>
-                  LoginController(googleAuth: GoogleAuthSupabaseService())),
-          BlocProvider(create: (context) => RideCreationController()),
+                  RideCreationController(repositoryService: SupabaseService())),
           BlocProvider(
               create: (context) => VehicleConfigurationController(
-                  BlocProvider.of<RideCreationController>(context)))
+                  rideCreationController:
+                      BlocProvider.of<RideCreationController>(context),
+                  repositoryService: SupabaseService()))
         ],
         child: MaterialApp(
           title: 'Usper',

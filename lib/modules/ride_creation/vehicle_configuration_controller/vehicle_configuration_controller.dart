@@ -1,13 +1,10 @@
 import 'dart:ui';
 
 import 'package:bloc/bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:usper/constants/datatbase_tables.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
-import 'package:usper/utils/database/fetch_data.dart';
-import 'package:usper/utils/database/insert_data.dart';
+import 'package:usper/services/interfaces/repository_interface.dart';
 import 'package:usper/utils/vehicles_requests/get_reference_table.dart';
 import 'package:usper/utils/vehicles_requests/get_vehicles_makers.dart';
 import 'package:usper/utils/vehicles_requests/get_vehicles_models.dart';
@@ -17,7 +14,8 @@ part 'vehicle_configuration_state.dart';
 
 class VehicleConfigurationController
     extends Bloc<VehicleConfigurationEvent, VehicleConfigurationState> {
-  VehicleConfigurationController(this.rideCreationController)
+  VehicleConfigurationController(
+      {required this.rideCreationController, required this.repositoryService})
       : super(const SeatsCounterNewValue(0)) {
     on<SeatsCounterIncreased>(_increaseSeatsCounter);
     on<SeatsCounterDecreased>(_decreaseSeatsCounter);
@@ -31,6 +29,7 @@ class VehicleConfigurationController
   }
 
   RideCreationController rideCreationController;
+  RepositoryInterface repositoryService;
 
   int _seatsCounter = 0;
   final int _maxNumberOfSeats =
@@ -92,7 +91,7 @@ class VehicleConfigurationController
     } else {
       vehicle = Vehicle(
           _seatsCounter, vehicleModel!, event.vehiclePlate, vehicleColorName!);
-      await _insertVehicleDatabase(vehicle!, driver);
+      await repositoryService.insertVehicle(vehicle!, driver);
       _clearData();
       rideCreationController.add(VehicleRideChosed(vehicle!));
       emit(VehicleDefined());
@@ -101,13 +100,8 @@ class VehicleConfigurationController
 
   Future<void> _retrieveVehiclesList(RetrieveVehiclesList event,
       Emitter<VehicleConfigurationState> emit) async {
-    List<Map<String, dynamic>> rawList = await fetchData(
-        DatabaseTables.vehicles, {"owner_email": event.driverEmail});
-
-    emit(VehiclesListRetrieved(rawList
-        .map((value) => Vehicle(
-            value["seats"], value["model"], value["plate"], value["color"]))
-        .toList()));
+    emit(VehiclesListRetrieved(
+        await repositoryService.fetchVehiclesByOwner(event.driverEmail)));
   }
 
   void _setRideVehicle(
@@ -156,20 +150,6 @@ class VehicleConfigurationController
       VehicleModelSelected event, Emitter<VehicleConfigurationState> emit) {
     vehicleModel = event.vehicleModel;
     emit(VehicleModelDefined());
-  }
-
-  Future<void> _insertVehicleDatabase(Vehicle vehicle, UsperUser user) async {
-    try {
-      await insertData(DatabaseTables.vehicles, {
-        "plate": vehicle.licensePlate,
-        "seats": vehicle.seats,
-        "color": vehicle.color,
-        "model": vehicle.model,
-        "owner_email": user.email
-      });
-    } on PostgrestException catch (e) {
-      if (e.code != null && "23505".compareTo(e.code!) != 0) rethrow;
-    }
   }
 
   void _clearData() {

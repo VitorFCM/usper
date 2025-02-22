@@ -1,5 +1,5 @@
 import 'package:usper/core/classes/class_usper_user.dart';
 
-abstract class GoogleAuthenticationInterface {
+abstract interface class GoogleAuthenticationInterface {
   Future<UsperUser?> performGoogleLogin();
 }
