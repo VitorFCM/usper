@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
-import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/accept_ride_dialog.dart';
 import 'package:usper/widgets/ride_info.dart';
 import 'package:usper/widgets/user_image.dart';
 
 class AvlRideCard extends StatelessWidget {
-  final UsperUser driver;
   final RideData rideData;
 
-  const AvlRideCard({super.key, required this.driver, required this.rideData});
+  const AvlRideCard({super.key, required this.rideData});
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +19,8 @@ class AvlRideCard extends StatelessWidget {
         onTap: () => {
               showDialog(
                   context: context,
-                  builder: (context) =>
-                      AcceptRideDialog(driver: driver, rideData: rideData))
+                  builder: (context) => AcceptRideDialog(
+                      driver: rideData.driver, rideData: rideData))
             },
         child: Container(
             decoration: BoxDecoration(
@@ -34,7 +32,7 @@ class AvlRideCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    UserImage(user: driver, radius: 25),
+                    UserImage(user: rideData.driver, radius: 25),
                     const SizedBox(width: 10),
                     Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,7 +42,7 @@ class AvlRideCard extends StatelessWidget {
                                   maxWidth:
                                       MediaQuery.of(context).size.width * 0.5),
                               child: Text(
-                                driver.firstName,
+                                rideData.driver.firstName,
                                 style: const TextStyle(
                                     color: white,
                                     fontSize: 15,

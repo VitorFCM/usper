@@ -30,7 +30,13 @@ class PassengersSelScreen extends StatelessWidget {
       originCoord: LatLng(0.0, 0.0),
       destCoord: LatLng(0.0, 0.0),
       departTime: DateTime.now(),
-      vehicle: Vehicle(4, "Corsa", "ABC-7777", "red"));
+      vehicle: Vehicle(4, "Corsa", "ABC-7777", "red"),
+      driver: UsperUser(
+          "",
+          "Vitor",
+          "Favrin Carrera Miguel",
+          "Engenharia de Computacao",
+          "https://images.trustinnews.pt/uploads/sites/5/2019/10/o-que-nunca-se-deve-fazer-a-um-gato-2.jpeg"));
 
   @override
   Widget build(BuildContext context) {

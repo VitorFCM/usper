@@ -1,4 +1,5 @@
 import 'package:latlong2/latlong.dart';
+import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
 
 class RideData {
@@ -8,6 +9,7 @@ class RideData {
   LatLng destCoord;
   DateTime departTime;
   Vehicle vehicle;
+  UsperUser driver;
 
   RideData(
       {required this.originName,
@@ -15,5 +17,6 @@ class RideData {
       required this.originCoord,
       required this.destCoord,
       required this.departTime,
-      required this.vehicle});
+      required this.vehicle,
+      required this.driver});
 }
