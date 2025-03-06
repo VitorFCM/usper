@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/home/screen/home_screen.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/modules/login/screen/login_screen.dart';
@@ -11,8 +12,9 @@ import 'package:usper/modules/passengers_selection/passengers_sel_screen.dart';
 import 'package:usper/modules/ride_creation/screen/ride_creation_screen.dart';
 import 'package:usper/modules/ride_creation/vehicle_configuration_controller/vehicle_configuration_controller.dart';
 import 'package:usper/modules/waiting_room/screen/waiting_room_screen.dart';
-import 'package:usper/services/google_auth_supabase_service.dart';
-import 'package:usper/services/supabase_service.dart';
+import 'package:usper/services/authentication/google_auth_supabase_service.dart';
+import 'package:usper/services/data_repository/repository_interface.dart';
+import 'package:usper/services/data_repository/supabase_service.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -32,20 +34,24 @@ class Application extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final RepositoryInterface repositoryService = SupabaseService();
     return MultiBlocProvider(
         providers: [
           BlocProvider(
               create: (context) => LoginController(
                   googleAuth: GoogleAuthSupabaseService(),
-                  repositoryService: SupabaseService())),
+                  repositoryService: repositoryService)),
           BlocProvider(
               create: (context) =>
-                  RideCreationController(repositoryService: SupabaseService())),
+                  RideCreationController(repositoryService: repositoryService)),
           BlocProvider(
               create: (context) => VehicleConfigurationController(
                   rideCreationController:
                       BlocProvider.of<RideCreationController>(context),
-                  repositoryService: SupabaseService()))
+                  repositoryService: repositoryService)),
+          BlocProvider(
+              create: (context) =>
+                  HomeController(repositoryService: repositoryService))
         ],
         child: MaterialApp(
           title: 'Usper',
