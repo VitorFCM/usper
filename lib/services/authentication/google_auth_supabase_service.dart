@@ -2,8 +2,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
-import 'package:usper/services/exceptions/google_authentication_exceptions.dart';
-import 'package:usper/services/interfaces/google_authentication_interface.dart';
+import 'package:usper/services/authentication/google_authentication_exceptions.dart';
+import 'package:usper/services/authentication/google_authentication_interface.dart';
 import 'package:usper/utils/check_email_domain.dart';
 
 class GoogleAuthSupabaseService implements GoogleAuthenticationInterface {
@@ -20,10 +20,11 @@ class GoogleAuthSupabaseService implements GoogleAuthenticationInterface {
 
     final googleUser = await googleSignIn.signIn();
 
-    if (!checkEmailDomain(googleUser!.email, "usp.br")) {
-      await googleSignIn.signOut();
-      throw NotAUniversityEmail();
-    }
+    //Following lines are commented for debug purpose only, remove for production
+    //if (!checkEmailDomain(googleUser!.email, "usp.br")) {
+    //  await googleSignIn.signOut();
+    //  throw NotAUniversityEmail();
+    //}
 
     final googleAuth = await googleUser!.authentication;
     final accessToken = googleAuth.accessToken;

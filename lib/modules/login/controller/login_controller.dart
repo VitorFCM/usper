@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
-import 'package:usper/services/exceptions/google_authentication_exceptions.dart';
-import 'package:usper/services/interfaces/google_authentication_interface.dart';
-import 'package:usper/services/interfaces/repository_interface.dart';
+import 'package:usper/services/authentication/google_authentication_exceptions.dart';
+import 'package:usper/services/authentication/google_authentication_interface.dart';
+import 'package:usper/services/data_repository/repository_interface.dart';
 
 part 'login_event.dart';
 part 'login_state.dart';

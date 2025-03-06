@@ -4,7 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
-import 'package:usper/services/interfaces/repository_interface.dart';
+import 'package:usper/services/data_repository/repository_interface.dart';
 import 'package:usper/utils/vehicles_requests/get_reference_table.dart';
 import 'package:usper/utils/vehicles_requests/get_vehicles_makers.dart';
 import 'package:usper/utils/vehicles_requests/get_vehicles_models.dart';
