@@ -5,6 +5,7 @@ import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
+import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/widgets/avl_ride_card.dart';
 import 'package:usper/widgets/base_screen.dart';
@@ -14,13 +15,7 @@ import 'package:usper/widgets/user_image.dart';
 class HomeScreen extends StatelessWidget {
   HomeScreen({Key? key}) : super(key: key);
 
-  final RideData r = RideData(
-      originName: "Engcomp",
-      destName: "IFSC",
-      originCoord: LatLng(0.0, 0.0),
-      destCoord: LatLng(0.0, 0.0),
-      departTime: DateTime.now(),
-      vehicle: Vehicle(4, "Corsa", "ABC-7777", "red"));
+  Map<String, RideData> rides = {};
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +56,7 @@ class HomeScreen extends StatelessWidget {
               color: white, fontSize: 15, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
-        avaibleRides(context, u)
+        availableRides(context)
       ],
     ));
   }
@@ -97,12 +92,35 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget avaibleRides(BuildContext context, UsperUser driver) {
-    //Future implementation of BlocBuilder
-    return SingleChildScrollView(
-      child: Column(
-        children: [AvlRideCard(driver: driver, rideData: r)],
-      ),
+  Widget availableRides(BuildContext context) {
+    return BlocBuilder<HomeController, HomeScreenState>(
+      buildWhen: (previous, current) {
+        return current is InitialRidesLoaded ||
+            current is InsertRideRecordState ||
+            current is RemoveRideRecordState;
+      },
+      builder: (context, state) {
+        print("atualizou");
+        if (state is InitialRidesLoaded) {
+          rides = state.rides;
+        } else if (state is InsertRideRecordState) {
+          rides[state.rideData.driver.email] = state.rideData;
+        } else if (state is RemoveRideRecordState) {
+          rides.remove(state.rideData.driver.email);
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: rides.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: AvlRideCard(rideData: rides.values.toList()[index]),
+            );
+          },
+        );
+      },
     );
   }
 }
