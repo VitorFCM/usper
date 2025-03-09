@@ -3,7 +3,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
-import 'package:usper/services/interfaces/repository_interface.dart';
+import 'package:usper/services/data_repository/repository_interface.dart';
 import 'package:usper/utils/displayable_address.dart';
 
 part 'ride_creation_event.dart';
@@ -38,7 +38,7 @@ class RideCreationController
     print(event.locationData.latLong.latitude);
     print(event.locationData.latLong.longitude);
     print(event.locationData.addressData);
-    print(event.locationData.addressData['country']);
+    print(event.locationData.address);
 
     originData = event.locationData;
 
@@ -84,12 +84,14 @@ class RideCreationController
           event.driver!.email,
           departTime!,
           (
-            address: originData!.address,
+            address: displayableAddress(
+                originData!.addressData), //originData!.address,
             latitude: originData!.latLong.latitude,
             longitude: originData!.latLong.longitude
           ),
           (
-            address: destData!.address,
+            address:
+                displayableAddress(destData!.addressData), //destData!.address,
             latitude: destData!.latLong.latitude,
             longitude: destData!.latLong.longitude
           ),

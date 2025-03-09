@@ -2,6 +2,7 @@ String displayableAddress(Map<String, dynamic> addressData) {
   String road = addressData['road'] ?? '';
   String houseNumber = addressData['house_number'] ?? '';
   String suburb = addressData['suburb'] ?? '';
+  String city = addressData['city'] ?? '';
 
   String address = '';
 
@@ -21,6 +22,13 @@ String displayableAddress(Map<String, dynamic> addressData) {
       address += " - ";
     }
     address += suburb;
+  }
+
+  if (city.isNotEmpty) {
+    if (address.isNotEmpty) {
+      address += " - ";
+    }
+    address += city;
   }
 
   if (address.isNotEmpty) {
