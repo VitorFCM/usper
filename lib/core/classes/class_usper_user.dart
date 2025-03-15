@@ -1,8 +1,8 @@
 class UsperUser {
-  final String firstName;
-  final String lastName;
-  final String course;
-  final String imageLink;
+  String firstName;
+  String lastName;
+  String course;
+  String imageLink;
   final String email;
 
   UsperUser(

@@ -3,8 +3,8 @@ import 'package:usper/utils/http_post.dart';
 
 Future<List<String>> getVehiclesModels(
     int makerCode, int tableCode, int vehicleTypeCode) async {
-  final url =
-      Uri.parse('https://veiculos.fipe.org.br/api/veiculos/ConsultarModelos');
+  const String url =
+      "https://veiculos.fipe.org.br/api/veiculos/ConsultarModelos";
 
   final body = json.encode({
     "codigoTipoVeiculo": vehicleTypeCode,
@@ -16,9 +16,15 @@ Future<List<String>> getVehiclesModels(
     "Content-Type": "application/json",
   };
 
-  Map<String, dynamic>? response = await httpPost(url, headers, body);
+  String? response = await httpPost(url, headers: headers, body: body);
 
-  return response?["Modelos"].map<String>((model) {
+  if (response == null) {
+    return [];
+  }
+
+  Map<String, dynamic> modelsMap = json.decode(response);
+
+  return modelsMap["Modelos"].map<String>((model) {
     return model['Label'].toString();
   }).toList();
 }

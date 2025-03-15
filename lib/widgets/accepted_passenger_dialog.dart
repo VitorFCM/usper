@@ -10,9 +10,6 @@ class AcceptedPassengerDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double dialogWidth = MediaQuery.of(context).size.width * 0.3;
-    const double infoFontSize = 15;
-
     return AlertDialog(
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12.0))),

@@ -10,6 +10,7 @@ import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 import 'package:usper/utils/database/fetch_data.dart';
 import 'package:usper/utils/database/insert_data.dart';
+import 'package:usper/utils/database/update_data.dart';
 
 class SupabaseService implements RepositoryInterface {
   final StreamController<MapEntry<DatabaseEventType, RideData>>
@@ -25,7 +26,7 @@ class SupabaseService implements RepositoryInterface {
   }
 
   @override
-  Future<void> insertUser(UsperUser user) async {
+  Future<bool> insertUser(UsperUser user) async {
     try {
       await insertData(DatabaseTables.users, {
         "email": user.email,
@@ -33,8 +34,12 @@ class SupabaseService implements RepositoryInterface {
         "first_name": user.firstName,
         "last_name": user.lastName
       });
+      return true;
     } on PostgrestException catch (e) {
-      if (e.code != null && "23505".compareTo(e.code!) != 0) rethrow;
+      if (e.code != null && "23505".compareTo(e.code!) == 0) {
+        return false;
+      }
+      rethrow;
     }
   }
 
@@ -173,5 +178,18 @@ class SupabaseService implements RepositoryInterface {
         allAvailableRides![rideCreated.driver.email] = rideCreated;
         return MapEntry(DatabaseEventType.insert, rideCreated);
     }
+  }
+
+  @override
+  Future<void> updateUser(final UsperUser user) async {
+    await updateData(
+        DatabaseTables.users,
+        {
+          "image_link": user.imageLink,
+          "first_name": user.firstName,
+          "last_name": user.lastName,
+          "course": user.course
+        },
+        MapEntry("email", user.email));
   }
 }

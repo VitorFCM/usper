@@ -44,8 +44,8 @@ class GoogleAuthSupabaseService implements GoogleAuthenticationInterface {
     );
 
     final List<String> names = _splitName(r.user!.userMetadata!['full_name']);
-    return UsperUser(r.user!.userMetadata!['email'], names[0], names[1],
-        "course", r.user!.userMetadata!['avatar_url']);
+    return UsperUser(r.user!.userMetadata!['email'], names[0], names[1], "",
+        r.user!.userMetadata!['avatar_url']);
   }
 
   List<String> _splitName(final fullName) {

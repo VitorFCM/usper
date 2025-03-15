@@ -1,39 +1,29 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+
+import 'package:usper/utils/http_post.dart';
 
 Future<int> getReferenceTable() async {
-  final url = Uri.parse(
-      'https://veiculos.fipe.org.br/api/veiculos/ConsultarTabelaDeReferencia');
+  const String url =
+      "https://veiculos.fipe.org.br/api/veiculos/ConsultarTabelaDeReferencia";
 
   final headers = {
     "Content-Type": "application/json",
   };
 
-  try {
-    final response = await http.post(
-      url,
-      headers: headers,
-    );
+  String? response = await httpPost(url, headers: headers);
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-
-      final latestData = data.reduce((a, b) {
-        final aDate = _getDate(a['Mes']);
-        final bDate = _getDate(b['Mes']);
-        return aDate.isAfter(bDate) ? a : b;
-      });
-
-      return latestData['Codigo'];
-    } else {
-      print('Request failed with status: ${response.statusCode}');
-      print(response.body);
-      return 318;
-    }
-  } catch (e) {
-    print('Error: $e');
-    return 318;
+  if (response == null) {
+    return 319;
   }
+  List<dynamic> data = json.decode(response);
+
+  final latestData = data.reduce((a, b) {
+    final aDate = _getDate(a['Mes']);
+    final bDate = _getDate(b['Mes']);
+    return aDate.isAfter(bDate) ? a : b;
+  });
+
+  return latestData['Codigo'];
 }
 
 DateTime _getDate(String monthString) {

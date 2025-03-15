@@ -15,3 +15,11 @@ class LoginError extends LoginState {
 
   const LoginError({required this.errorMessage});
 }
+
+class UspCoursesList extends LoginState {
+  final List<String> courses;
+
+  const UspCoursesList({required this.courses});
+}
+
+class UspCourseUpdated extends LoginState {}

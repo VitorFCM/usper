@@ -1,26 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
-import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/widgets/avl_ride_card.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/page_title.dart';
 import 'package:usper/widgets/user_image.dart';
+import 'package:usper/widgets/usp_course_selector.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({Key? key}) : super(key: key);
 
   Map<String, RideData> rides = {};
+  late UsperUser u;
+  bool _dialogOpened = false;
 
   @override
   Widget build(BuildContext context) {
-    UsperUser u =
-        context.select((LoginController controller) => controller.user!);
+    context.select((LoginController controller) {
+      u = controller.user!;
+      if (controller.isNewUser! && !_dialogOpened) {
+        _dialogOpened = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (ModalRoute.of(context)?.isCurrent ?? false) {
+            controller.uspCarrersCodes?.then((uspCourses) {
+              if (!Navigator.of(context).canPop()) {
+                showDialog(
+                  context: context,
+                  builder: (context) =>
+                      UspCourseSelector(uspCarrers: uspCourses),
+                );
+              }
+            });
+          }
+        });
+      }
+    });
+
     const double imgRadius = 35;
     const double lateralPadding = 15;
     double titleOcupation = MediaQuery.of(context).size.width * 0.68;

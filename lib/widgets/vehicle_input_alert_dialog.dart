@@ -8,6 +8,7 @@ import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/modules/ride_creation/vehicle_configuration_controller/vehicle_configuration_controller.dart';
 import 'package:usper/utils/get_nearest_color_name.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
+import 'package:usper/widgets/text_dropdown_menu.dart';
 
 class VehicleInputAlertDialog extends StatelessWidget {
   VehicleInputAlertDialog({super.key});
@@ -232,11 +233,12 @@ class VehicleInputAlertDialog extends StatelessWidget {
               List<String> dropdownValues = state is VehicleMakersRetrieved
                   ? state.vehicleMakers
                   : ["Sem marcas"];
-              return dropdownMenu(
-                  dropdownValues,
-                  "Marca",
-                  (String value) => vehicleConfigurationController
-                      .add(VehicleMakerSelected(value)));
+              return TextDropdownMenu.fromList(
+                  values: dropdownValues,
+                  label: "Marca",
+                  onSelectedCallback: (String value) =>
+                      vehicleConfigurationController
+                          .add(VehicleMakerSelected(value)));
             }),
             BlocBuilder<VehicleConfigurationController,
                 VehicleConfigurationState>(buildWhen: (previous, current) {
@@ -245,53 +247,17 @@ class VehicleInputAlertDialog extends StatelessWidget {
               List<String> dropdownValues = state is VehicleModelsRetrieved
                   ? state.vehicleModels
                   : ["Sem modelos"];
-              return dropdownMenu(
-                  dropdownValues,
-                  "Modelo",
-                  (String value) => vehicleConfigurationController
-                      .add(VehicleModelSelected(value)));
+              return TextDropdownMenu.fromList(
+                  values: dropdownValues,
+                  label: "Modelo",
+                  onSelectedCallback: (String value) =>
+                      vehicleConfigurationController
+                          .add(VehicleModelSelected(value)));
             })
           ],
         ),
         white,
         160);
-  }
-
-  Widget dropdownMenu(List<String> dropdownValues, String label,
-      Function(String) onSelectedCallback) {
-    return DropdownMenu<String>(
-      initialSelection: dropdownValues.first,
-      label: Text(label),
-      width: 140,
-      onSelected: (String? value) {
-        if (value != null) {
-          onSelectedCallback(value);
-        }
-      },
-      textStyle: const TextStyle(color: white),
-      dropdownMenuEntries: dropdownValues
-          .map<DropdownMenuEntry<String>>(
-            (String name) => DropdownMenuEntry<String>(
-              value: name,
-              style: const ButtonStyle(
-                  foregroundColor: MaterialStatePropertyAll(white)),
-              label: name,
-            ),
-          )
-          .toList(),
-      menuHeight: 250,
-      menuStyle: const MenuStyle(
-          backgroundColor: MaterialStatePropertyAll(Colors.black)),
-      inputDecorationTheme: InputDecorationTheme(
-        labelStyle: const TextStyle(color: white),
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        constraints: BoxConstraints.tight(const Size.fromHeight(40)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
   }
 
   TextButton button(String title, Color textColor, double minWidth,
