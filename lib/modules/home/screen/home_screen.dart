@@ -119,7 +119,6 @@ class HomeScreen extends StatelessWidget {
             current is RemoveRideRecordState;
       },
       builder: (context, state) {
-        print("atualizou");
         if (state is InitialRidesLoaded) {
           rides = state.rides;
         } else if (state is InsertRideRecordState) {

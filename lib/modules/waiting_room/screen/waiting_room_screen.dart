@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
+import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/utils/calc_text_size.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/arrow.dart';
@@ -16,30 +18,14 @@ class WaitingRoomScreen extends StatelessWidget {
 
   late double _txtInfoMaxWidth;
   static const double lateralPadding = 15;
-
-  final UsperUser u = UsperUser(
-      "",
-      "Vitor",
-      "Favrin Carrera Miguel",
-      "Engenharia de Computacao",
-      "https://images.trustinnews.pt/uploads/sites/5/2019/10/o-que-nunca-se-deve-fazer-a-um-gato-2.jpeg");
-
-  final RideData r = RideData(
-      originName: "Engcomppppppppppppppppp",
-      destName: "Instituto de ciencias matematicas e computacao",
-      originCoord: LatLng(0.0, 0.0),
-      destCoord: LatLng(0.0, 0.0),
-      departTime: DateTime.now(),
-      vehicle: Vehicle(4, "Corsa", "ABC-7777", "red"),
-      driver: UsperUser(
-          "",
-          "Vitor",
-          "Favrin Carrera Miguel",
-          "Engenharia de Computacao",
-          "https://images.trustinnews.pt/uploads/sites/5/2019/10/o-que-nunca-se-deve-fazer-a-um-gato-2.jpeg"));
+  late Map<String, UsperUser> acceptedRideRequests;
 
   @override
   Widget build(BuildContext context) {
+    WaitingRoomController controller =
+        BlocProvider.of<WaitingRoomController>(context);
+
+    acceptedRideRequests = controller.acceptedRideRequests;
     double titleOcupation = MediaQuery.of(context).size.width * 0.68;
     double buttonWidth = MediaQuery.of(context).size.width * 0.5;
 
@@ -56,7 +42,7 @@ class WaitingRoomScreen extends StatelessWidget {
             child: PageTitle(title: "Sala de Espera"),
           ),
           const SizedBox(height: 20),
-          rideInfoCard(u, r, context),
+          rideInfoCard(controller.ride, context),
           const SizedBox(height: 20),
           const Text(
             "Passageiros aprovados",
@@ -66,30 +52,16 @@ class WaitingRoomScreen extends StatelessWidget {
           ConstrainedBox(
             constraints: BoxConstraints(
                 maxHeight: passSectionHeight, minHeight: passSectionHeight),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                ],
-              ),
-            ),
+            child: approvedPassengers(context),
           ),
           Padding(
             padding: const EdgeInsets.only(top: 120),
             child: Align(
               alignment: Alignment.center,
-              child: button("Cancelar", white, buttonWidth,
-                  () => Navigator.pop(context), Colors.black),
+              child: button("Cancelar", white, buttonWidth, () {
+                controller.add(CancelRideRequest());
+                Navigator.pop(context);
+              }, Colors.black),
             ),
           )
         ],
@@ -97,19 +69,19 @@ class WaitingRoomScreen extends StatelessWidget {
     );
   }
 
-  Widget rideInfoCard(
-      UsperUser driver, RideData rideData, BuildContext context) {
+  Widget rideInfoCard(RideData rideData, BuildContext context) {
     const double edgeInsets = 10;
 
     double destNameWidth =
-        calcTextSize(r.destName, const TextStyle(fontSize: 12)).width;
+        calcTextSize(rideData.destName, const TextStyle(fontSize: 12)).width;
 
     double arrowEnd = (destNameWidth < _txtInfoMaxWidth)
         ? MediaQuery.of(context).size.width -
             2 * lateralPadding -
             2 * edgeInsets -
             20 -
-            calcTextSize(r.originName, const TextStyle(fontSize: 12)).width -
+            calcTextSize(rideData.originName, const TextStyle(fontSize: 12))
+                .width -
             destNameWidth
         : _txtInfoMaxWidth - 20;
 
@@ -123,13 +95,13 @@ class WaitingRoomScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                UserImage(user: driver, radius: 30),
+                UserImage(user: rideData.driver, radius: 30),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    textInfo(driver.firstName, Colors.black, 18),
-                    textInfo(driver.course, Colors.black, 12)
+                    textInfo(rideData.driver.firstName, Colors.black, 18),
+                    textInfo(rideData.driver.course, Colors.black, 12)
                   ],
                 ),
                 const Spacer(),
@@ -142,7 +114,7 @@ class WaitingRoomScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       textInfo("Partida", white, 13),
-                      textInfo(datetimeToString(r.departTime), white, 12)
+                      textInfo(datetimeToString(rideData.departTime), white, 12)
                     ],
                   ),
                 )
@@ -151,7 +123,7 @@ class WaitingRoomScreen extends StatelessWidget {
             const SizedBox(height: 30),
             Row(
               children: [
-                textInfo(r.originName, Colors.black, 12),
+                textInfo(rideData.originName, Colors.black, 12),
                 Expanded(
                   child: Container(
                     height: 50,
@@ -163,12 +135,42 @@ class WaitingRoomScreen extends StatelessWidget {
                 ),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: textInfo(r.destName, Colors.black, 12),
+                  child: textInfo(rideData.destName, Colors.black, 12),
                 )
               ],
             ),
           ],
         ));
+  }
+
+  Widget approvedPassengers(BuildContext context) {
+    return BlocBuilder<WaitingRoomController, WaitingRoomState>(
+      buildWhen: (previous, current) {
+        return true;
+      },
+      builder: (context, state) {
+        if (state is AllAcceptedRequests) {
+          acceptedRideRequests = state.acceptedRequests;
+        } else if (state is NewRequestAcceptedState) {
+          acceptedRideRequests[state.passenger.email] = state.passenger;
+        } else if (state is RequestCancelledState) {
+          acceptedRideRequests.remove(state.passengerEmail);
+        }
+
+        print(acceptedRideRequests);
+
+        return ListView.builder(
+          shrinkWrap: true,
+          itemCount: acceptedRideRequests.length,
+          itemBuilder: (context, index) {
+            return Padding(
+                padding: const EdgeInsets.only(bottom: 15),
+                child:
+                    passengerCard(acceptedRideRequests.values.toList()[index]));
+          },
+        );
+      },
+    );
   }
 
   TextButton button(String title, Color textColor, double minWidth,

@@ -1,1 +1,1 @@
-enum DatabaseTables { users, vehicles, rides }
+enum DatabaseTables { users, vehicles, rides, ride_requests }

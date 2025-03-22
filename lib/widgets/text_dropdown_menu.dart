@@ -49,7 +49,6 @@ class TextDropdownMenu<T extends Object> extends StatelessWidget {
       label: Text(label),
       width: width,
       onSelected: (T? value) {
-        print("Clicouuuuuuuuuuuuuuuuu $value");
         if (value != null) {
           onSelectedCallback(value);
         }

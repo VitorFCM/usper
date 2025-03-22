@@ -2,20 +2,28 @@ import 'dart:async';
 
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:usper/constants/database_event_type.dart';
+import 'package:usper/constants/ride_data_event_type.dart';
 import 'package:usper/constants/datatbase_tables.dart';
+import 'package:usper/constants/ride_requests_event_type.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
+import 'package:usper/utils/database/delete_data.dart';
 import 'package:usper/utils/database/fetch_data.dart';
 import 'package:usper/utils/database/insert_data.dart';
 import 'package:usper/utils/database/update_data.dart';
 
 class SupabaseService implements RepositoryInterface {
-  final StreamController<MapEntry<DatabaseEventType, RideData>>
+  final StreamController<MapEntry<RideDataEventType, RideData>>
       _rideDataStreamController =
-      StreamController<MapEntry<DatabaseEventType, RideData>>.broadcast();
+      StreamController<MapEntry<RideDataEventType, RideData>>.broadcast();
+
+  StreamController<MapEntry<RideRequestsEventType, dynamic>>
+      _rideRequestsStreamController =
+      StreamController<MapEntry<RideRequestsEventType, dynamic>>.broadcast();
+
+  late RealtimeChannel supabaseRideRequestsChannel;
 
   final supabase = Supabase.instance.client;
 
@@ -95,7 +103,7 @@ class SupabaseService implements RepositoryInterface {
   }
 
   @override
-  Stream<MapEntry<DatabaseEventType, RideData>> rideDataStream() {
+  Stream<MapEntry<RideDataEventType, RideData>> rideDataStream() {
     return _rideDataStreamController.stream;
   }
 
@@ -110,9 +118,9 @@ class SupabaseService implements RepositoryInterface {
         .toList();
   }
 
-  Future<UsperUser> _fetchDriver(final String driverId) async {
+  Future<UsperUser> _fetchUser(final String userEmail) async {
     List<Map<String, dynamic>> rawList =
-        await fetchData(DatabaseTables.users, {"email": driverId});
+        await fetchData(DatabaseTables.users, {"email": userEmail});
 
     return rawList
         .map((value) => UsperUser(value["email"], value["first_name"],
@@ -129,7 +137,7 @@ class SupabaseService implements RepositoryInterface {
     List<Vehicle> vehiclesList = await _fetchVehiclesByMatchCondition(
         {"plate": record["vehicle_plate"]});
 
-    UsperUser driver = await _fetchDriver(record["driver_email"]);
+    UsperUser driver = await _fetchUser(record["driver_email"]);
 
     return RideData(
         driver: driver,
@@ -152,31 +160,30 @@ class SupabaseService implements RepositoryInterface {
             schema: 'public',
             table: DatabaseTables.rides.name,
             callback: (payload) async {
-              print(payload);
               _rideDataStreamController
-                  .add(await _payloadToStreamMapEntry(payload));
+                  .add(await _payloadToStreamRideData(payload));
             })
         .subscribe();
   }
 
-  Future<MapEntry<DatabaseEventType, RideData>> _payloadToStreamMapEntry(
+  Future<MapEntry<RideDataEventType, RideData>> _payloadToStreamRideData(
       PostgresChangePayload payload) async {
     switch (payload.eventType) {
       case PostgresChangeEvent.update:
         RideData? rideStarted =
             allAvailableRides!.remove(payload.newRecord["driver_email"]);
-        return MapEntry(DatabaseEventType.update, rideStarted!);
+        return MapEntry(RideDataEventType.update, rideStarted!);
       case PostgresChangeEvent.delete:
         RideData? rideRemoved =
             allAvailableRides!.remove(payload.oldRecord["driver_email"]);
-        return MapEntry(DatabaseEventType.delete, rideRemoved!);
+        return MapEntry(RideDataEventType.delete, rideRemoved!);
       case PostgresChangeEvent.insert:
       case PostgresChangeEvent.all:
         RideData rideCreated =
             await _createRideDataByRawRecord(payload.newRecord);
 
         allAvailableRides![rideCreated.driver.email] = rideCreated;
-        return MapEntry(DatabaseEventType.insert, rideCreated);
+        return MapEntry(RideDataEventType.insert, rideCreated);
     }
   }
 
@@ -191,5 +198,93 @@ class SupabaseService implements RepositoryInterface {
           "course": user.course
         },
         MapEntry("email", user.email));
+  }
+
+  @override
+  Future<void> insertRideRequest(RideData ride, UsperUser passenger) async {
+    try {
+      await insertData(DatabaseTables.ride_requests, {
+        "driver_email": ride.driver.email,
+        "passenger_email": passenger.email
+      });
+      _initRideRequestsController(ride.driver.email);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _initRideRequestsController(String driverId) {
+    if (_rideRequestsStreamController.isClosed) {
+      _rideRequestsStreamController = StreamController<
+          MapEntry<RideRequestsEventType, dynamic>>.broadcast();
+    }
+    supabaseRideRequestsChannel = supabase
+        .channel("public:${DatabaseTables.ride_requests.name}")
+        .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: DatabaseTables.ride_requests.name,
+            filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'driver_email',
+                value: driverId),
+            callback: (payload) async {
+              print(payload);
+              _rideRequestsStreamController
+                  .add(await _payloadToStreamRideRequest(payload));
+            })
+        .subscribe();
+  }
+
+  Future<MapEntry<RideRequestsEventType, dynamic>> _payloadToStreamRideRequest(
+      PostgresChangePayload payload) async {
+    switch (payload.eventType) {
+      case PostgresChangeEvent.update:
+        if (payload.newRecord["accepted"]) {
+          return MapEntry(RideRequestsEventType.accepted,
+              await _fetchUser(payload.newRecord["passenger_email"]));
+        } else {
+          return MapEntry(RideRequestsEventType.refused,
+              payload.newRecord["passenger_email"]);
+        }
+
+      case PostgresChangeEvent.delete:
+        return MapEntry(RideRequestsEventType.cancelled,
+            payload.oldRecord["passenger_email"]);
+      case PostgresChangeEvent.insert:
+      case PostgresChangeEvent.all:
+        return MapEntry(RideRequestsEventType.requested,
+            await _fetchUser(payload.newRecord["passenger_email"]));
+    }
+  }
+
+  @override
+  Future<List<MapEntry<bool?, UsperUser>>> fetchAllRideRequests(
+      String driverId) async {
+    List<Map<String, dynamic>> rawList = await fetchData(
+        DatabaseTables.ride_requests, {"driver_email": driverId});
+
+    return [
+      for (var record in rawList)
+        MapEntry(
+            record["accepted"], await _fetchUser(record["passenger_email"]))
+    ];
+  }
+
+  @override
+  Stream<MapEntry<RideRequestsEventType, dynamic>> rideRequestsStream() {
+    return _rideRequestsStreamController.stream;
+  }
+
+  @override
+  void stopRideRequestsStream() {
+    _rideRequestsStreamController.close();
+    supabaseRideRequestsChannel.unsubscribe();
+  }
+
+  @override
+  Future<void> deleteRideRequest(String driverId, String passengerId) async {
+    await deleteData(DatabaseTables.ride_requests,
+        {"driver_email": driverId, "passenger_email": passengerId});
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:usper/constants/database_event_type.dart';
+import 'package:usper/constants/ride_data_event_type.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 
@@ -17,10 +17,10 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
 
     repositoryService.rideDataStream().listen((rideDataEvent) {
       switch (rideDataEvent.key) {
-        case DatabaseEventType.insert:
+        case RideDataEventType.insert:
           add(RideCreated(rideData: rideDataEvent.value));
-        case DatabaseEventType.update:
-        case DatabaseEventType.delete:
+        case RideDataEventType.update:
+        case RideDataEventType.delete:
           add(RideUpdatedOrDeleted(rideData: rideDataEvent.value));
       }
     });

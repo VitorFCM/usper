@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
+import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/ride_info.dart';
 import 'package:usper/widgets/user_image.dart';
@@ -81,8 +83,12 @@ class AcceptRideDialog extends StatelessWidget {
   }
 
   TextButton acceptRideButton(BuildContext context) {
+    WaitingRoomController controller =
+        BlocProvider.of<WaitingRoomController>(context);
     return TextButton(
       onPressed: () {
+        controller.add(CreateRideRequest(ride: rideData));
+        controller.add(FetchAcceptedRideRequests());
         Navigator.pushNamed(context, "/waiting_room");
       },
       style: TextButton.styleFrom(
