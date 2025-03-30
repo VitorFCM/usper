@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
+import 'package:usper/modules/passengers_selection/controller/passengers_selection_controller.dart';
 import 'package:usper/utils/calc_text_size.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/arrow.dart';
@@ -16,27 +18,8 @@ class PassengersSelScreen extends StatelessWidget {
 
   late double _txtInfoMaxWidth;
   static const double lateralPadding = 15;
-
-  final UsperUser u = UsperUser(
-      "",
-      "Vitor",
-      "Favrin Carrera Miguel",
-      "Engenharia de Computacao",
-      "https://images.trustinnews.pt/uploads/sites/5/2019/10/o-que-nunca-se-deve-fazer-a-um-gato-2.jpeg");
-
-  final RideData r = RideData(
-      originName: "Engcomppppppppppppppppp",
-      destName: "Instituto de ciencias matematicas e computacao",
-      originCoord: LatLng(0.0, 0.0),
-      destCoord: LatLng(0.0, 0.0),
-      departTime: DateTime.now(),
-      vehicle: Vehicle(4, "Corsa", "ABC-7777", "red"),
-      driver: UsperUser(
-          "",
-          "Vitor",
-          "Favrin Carrera Miguel",
-          "Engenharia de Computacao",
-          "https://images.trustinnews.pt/uploads/sites/5/2019/10/o-que-nunca-se-deve-fazer-a-um-gato-2.jpeg"));
+  Map<String, UsperUser> passengersRequests = {};
+  Map<String, UsperUser> passengersAccepted = {};
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +30,6 @@ class PassengersSelScreen extends StatelessWidget {
     if (passSectionHeight >= 400) passSectionHeight = 400;
 
     _txtInfoMaxWidth = MediaQuery.of(context).size.width - 130;
-    print(MediaQuery.of(context).size.height);
     return BaseScreen(
       //child: Container(
       //height: MediaQuery.of(context).size.height * 0.9,
@@ -73,26 +55,9 @@ class PassengersSelScreen extends StatelessWidget {
           ),
           const SizedBox(height: 15),
           ConstrainedBox(
-            constraints: BoxConstraints(
-                maxHeight: passSectionHeight, minHeight: passSectionHeight),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                  const SizedBox(height: 15),
-                  passengerCard(u),
-                ],
-              ),
-            ),
-          ),
+              constraints: BoxConstraints(
+                  maxHeight: passSectionHeight, minHeight: passSectionHeight),
+              child: approvedPassengers(context)),
           //const Spacer(),
           Padding(
             padding: const EdgeInsets.only(top: 30),
@@ -116,30 +81,71 @@ class PassengersSelScreen extends StatelessWidget {
     );
   }
 
-  Widget newPassengersList(BuildContext context) {
-    ScrollController _controller = ScrollController(
-        initialScrollOffset: 1 * MediaQuery.of(context).size.width / 2);
+  Widget approvedPassengers(BuildContext context) {
+    return BlocBuilder<PassengersSelectionController, PassengersSelectionState>(
+      buildWhen: (previous, current) {
+        return true;
+      },
+      builder: (context, state) {
+        if (state is RequestCancelledState) {
+          passengersAccepted.remove(state.passengerEmail);
+        } else if (state is RequestAcceptedState) {
+          passengersAccepted[state.passenger.email] = state.passenger;
+        }
 
-    return ListView(
-      controller: _controller,
-      children: [
-        passengerSelCard(u),
-        SizedBox(width: 10),
-        passengerSelCard(u),
-        SizedBox(width: 10),
-        passengerSelCard(u),
-        SizedBox(width: 10),
-        passengerSelCard(u),
-        SizedBox(width: 10),
-        passengerSelCard(u),
-        SizedBox(width: 10),
-        passengerSelCard(u),
-      ],
-      scrollDirection: Axis.horizontal,
+        return ListView.builder(
+          shrinkWrap: true,
+          itemCount: passengersAccepted.length,
+          itemBuilder: (context, index) {
+            return Padding(
+                padding: const EdgeInsets.only(bottom: 15),
+                child:
+                    passengerCard(passengersAccepted.values.toList()[index]));
+          },
+        );
+      },
     );
   }
 
-  Widget passengerSelCard(UsperUser passenger) {
+  Widget newPassengersList(BuildContext context) {
+    ScrollController controller = ScrollController(
+        initialScrollOffset: 1 * MediaQuery.of(context).size.width / 2);
+
+    return BlocBuilder<PassengersSelectionController, PassengersSelectionState>(
+      buildWhen: (previous, current) {
+        return true;
+      },
+      builder: (context, state) {
+        if (state is RequestCreatedState) {
+          passengersRequests[state.passenger.email] = state.passenger;
+        } else if (state is RequestCancelledState) {
+          passengersRequests.remove(state.passengerEmail);
+        } else if (state is RequestRefusedState) {
+          passengersRequests.remove(state.passengerEmail);
+        } else if (state is RequestAcceptedState) {
+          passengersRequests.remove(state.passenger.email);
+        }
+
+        return ListView.builder(
+          //shrinkWrap: true,
+          itemCount: passengersRequests.length,
+          controller: controller,
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (context, index) {
+            return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: passengerSelCard(
+                    passengersRequests.values.toList()[index], context));
+          },
+        );
+      },
+    );
+  }
+
+  Widget passengerSelCard(UsperUser passenger, BuildContext context) {
+    PassengersSelectionController controller =
+        BlocProvider.of<PassengersSelectionController>(context);
+
     double cardWidth = 250;
     double padding = 10;
     return Container(
@@ -174,14 +180,25 @@ class PassengersSelScreen extends StatelessWidget {
               )
             ],
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              button("Recusar", white, 100, () => print("recusou"),
-                  Colors.black, 20),
-              button("Aceitar", Colors.black, 100, () => print("aceitou"),
-                  Colors.green, 20)
+              button(
+                  "Recusar",
+                  white,
+                  100,
+                  () => controller
+                      .add(RequestRefused(passengerEmail: passenger.email)),
+                  Colors.black,
+                  20),
+              button(
+                  "Aceitar",
+                  Colors.black,
+                  100,
+                  () => controller.add(RequestAccepted(passenger: passenger)),
+                  Colors.green,
+                  20)
             ],
           )
         ],

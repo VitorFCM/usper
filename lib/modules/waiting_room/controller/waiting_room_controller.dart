@@ -32,14 +32,17 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
   }
 
   void _startListeningRideRequests() {
-    repositoryService.rideRequestsStream().listen((rideDataEvent) {
+    repositoryService
+        .startRideRequestsStream(ride.driver.email)
+        .listen((rideDataEvent) {
       switch (rideDataEvent.key) {
         case RideRequestsEventType.accepted:
           add(NewRequestAccepted(passenger: rideDataEvent.value as UsperUser));
         case RideRequestsEventType.cancelled:
           add(RequestCancelled(passengerEmail: rideDataEvent.value as String));
-        case RideRequestsEventType.requested:
         case RideRequestsEventType.refused:
+        // Check if the refused user is the current user, so he can leaves the waiting room
+        case RideRequestsEventType.requested:
       }
     });
   }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
+import 'package:usper/modules/passengers_selection/controller/passengers_selection_controller.dart';
 import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
@@ -31,6 +32,8 @@ class RideCreationScreen extends StatelessWidget {
               builder: (context) =>
                   ErrorAlertDialog(errorMessage: state.errorMessage));
         } else if (state is RideCreated) {
+          BlocProvider.of<PassengersSelectionController>(context)
+              .add(SetRideData(ride: state.ride));
           Navigator.popAndPushNamed(context, "/passengers_selection");
         }
       },

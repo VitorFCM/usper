@@ -7,8 +7,7 @@ import 'package:usper/core/classes/class_vehicle.dart';
 abstract interface class RepositoryInterface {
   Future<bool> insertUser(UsperUser user);
   Future<void> insertVehicle(Vehicle vehicle, UsperUser user);
-  Future<void> insertRide(String driverId, DateTime departTime, var originData,
-      var destData, Vehicle vehicle);
+  Future<void> insertRide(RideData ride);
   Future<List<Vehicle>> fetchVehiclesByOwner(String ownerId);
   Future<Map<String, RideData>> fetchAllAvaiableRides();
   Stream<MapEntry<RideDataEventType, RideData>> rideDataStream();
@@ -17,7 +16,10 @@ abstract interface class RepositoryInterface {
       final RideData ride, final UsperUser passenger);
   Future<List<MapEntry<bool?, UsperUser>>> fetchAllRideRequests(
       String driverId);
-  Stream<MapEntry<RideRequestsEventType, dynamic>> rideRequestsStream();
+  Stream<MapEntry<RideRequestsEventType, dynamic>> startRideRequestsStream(
+      String rideId);
   void stopRideRequestsStream();
   Future<void> deleteRideRequest(String driverId, String passengerId);
+  Future<void> acceptRideRequest(String driverId, String passengerId);
+  Future<void> refuseRideRequest(String driverId, String passengerId);
 }

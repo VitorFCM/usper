@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
+import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
@@ -80,24 +81,23 @@ class RideCreationController
       emit(const RideCreationStateError(
           "Ocorreu um erro com o seu login, por favor feche o aplicativo e tente novamente"));
     } else {
-      await repositoryService.insertRide(
-          event.driver!.email,
-          departTime!,
-          (
-            address: displayableAddress(
-                originData!.addressData), //originData!.address,
-            latitude: originData!.latLong.latitude,
-            longitude: originData!.latLong.longitude
-          ),
-          (
-            address:
-                displayableAddress(destData!.addressData), //destData!.address,
-            latitude: destData!.latLong.latitude,
-            longitude: destData!.latLong.longitude
-          ),
-          vehicle!);
-      emit(const RideCreated());
+      RideData ride = _createRideData(event.driver!);
+      await repositoryService.insertRide(ride);
+      emit(RideCreated(ride: ride));
     }
+  }
+
+  RideData _createRideData(UsperUser driver) {
+    return RideData(
+        originName: displayableAddress(originData!.addressData),
+        destName: displayableAddress(destData!.addressData),
+        originCoord:
+            LatLng(originData!.latLong.latitude, originData!.latLong.longitude),
+        destCoord:
+            LatLng(destData!.latLong.latitude, destData!.latLong.longitude),
+        departTime: departTime!,
+        vehicle: vehicle!,
+        driver: driver);
   }
 
   void _clearData(RideCanceled event, Emitter<RideCreationState> emit) {

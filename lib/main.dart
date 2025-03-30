@@ -7,8 +7,9 @@ import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/home/screen/home_screen.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/modules/login/screen/login_screen.dart';
+import 'package:usper/modules/passengers_selection/controller/passengers_selection_controller.dart';
 import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
-import 'package:usper/modules/passengers_selection/passengers_sel_screen.dart';
+import 'package:usper/modules/passengers_selection/screen/passengers_sel_screen.dart';
 import 'package:usper/modules/ride_creation/screen/ride_creation_screen.dart';
 import 'package:usper/modules/ride_creation/vehicle_configuration_controller/vehicle_configuration_controller.dart';
 import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
@@ -56,7 +57,10 @@ class Application extends StatelessWidget {
           BlocProvider(
               create: (context) => WaitingRoomController(
                   repositoryService: repositoryService,
-                  user: BlocProvider.of<LoginController>(context).user!))
+                  user: BlocProvider.of<LoginController>(context).user!)),
+          BlocProvider(
+              create: (context) => PassengersSelectionController(
+                  repositoryService: repositoryService))
         ],
         child: MaterialApp(
           title: 'Usper',

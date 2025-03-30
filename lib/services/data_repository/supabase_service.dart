@@ -72,18 +72,17 @@ class SupabaseService implements RepositoryInterface {
   }
 
   @override
-  Future<void> insertRide(final String driverId, DateTime departTime,
-      var originData, var destData, Vehicle vehicle) async {
+  Future<void> insertRide(RideData ride) async {
     await insertData(DatabaseTables.rides, {
-      "driver_email": driverId,
-      "vehicle_plate": vehicle.licensePlate,
-      "origin_name": originData.address,
-      "destination_name": destData.address,
-      "origin_latitude": originData.latitude,
-      "origin_longitude": originData.longitude,
-      "dest_latitude": destData.latitude,
-      "dest_longitude": destData.longitude,
-      "depart_time": departTime.toIso8601String()
+      "driver_email": ride.driver.email,
+      "vehicle_plate": ride.vehicle.licensePlate,
+      "origin_name": ride.originName,
+      "destination_name": ride.destName,
+      "origin_latitude": ride.originCoord.latitude,
+      "origin_longitude": ride.originCoord.longitude,
+      "dest_latitude": ride.destCoord.latitude,
+      "dest_longitude": ride.destCoord.longitude,
+      "depart_time": ride.departTime.toIso8601String()
     });
   }
 
@@ -189,15 +188,14 @@ class SupabaseService implements RepositoryInterface {
 
   @override
   Future<void> updateUser(final UsperUser user) async {
-    await updateData(
-        DatabaseTables.users,
-        {
-          "image_link": user.imageLink,
-          "first_name": user.firstName,
-          "last_name": user.lastName,
-          "course": user.course
-        },
-        MapEntry("email", user.email));
+    await updateData(DatabaseTables.users, {
+      "image_link": user.imageLink,
+      "first_name": user.firstName,
+      "last_name": user.lastName,
+      "course": user.course
+    }, {
+      "email": user.email
+    });
   }
 
   @override
@@ -207,7 +205,6 @@ class SupabaseService implements RepositoryInterface {
         "driver_email": ride.driver.email,
         "passenger_email": passenger.email
       });
-      _initRideRequestsController(ride.driver.email);
     } catch (e) {
       print(e);
     }
@@ -229,7 +226,6 @@ class SupabaseService implements RepositoryInterface {
                 column: 'driver_email',
                 value: driverId),
             callback: (payload) async {
-              print(payload);
               _rideRequestsStreamController
                   .add(await _payloadToStreamRideRequest(payload));
             })
@@ -272,7 +268,9 @@ class SupabaseService implements RepositoryInterface {
   }
 
   @override
-  Stream<MapEntry<RideRequestsEventType, dynamic>> rideRequestsStream() {
+  Stream<MapEntry<RideRequestsEventType, dynamic>> startRideRequestsStream(
+      String rideId) {
+    _initRideRequestsController(rideId);
     return _rideRequestsStreamController.stream;
   }
 
@@ -285,6 +283,18 @@ class SupabaseService implements RepositoryInterface {
   @override
   Future<void> deleteRideRequest(String driverId, String passengerId) async {
     await deleteData(DatabaseTables.ride_requests,
+        {"driver_email": driverId, "passenger_email": passengerId});
+  }
+
+  @override
+  Future<void> acceptRideRequest(String driverId, String passengerId) async {
+    await updateData(DatabaseTables.ride_requests, {"accepted": true},
+        {"driver_email": driverId, "passenger_email": passengerId});
+  }
+
+  @override
+  Future<void> refuseRideRequest(String driverId, String passengerId) async {
+    await updateData(DatabaseTables.ride_requests, {"accepted": false},
         {"driver_email": driverId, "passenger_email": passengerId});
   }
 }
