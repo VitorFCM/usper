@@ -72,16 +72,14 @@ class WaitingRoomScreen extends StatelessWidget {
   Widget rideInfoCard(RideData rideData, BuildContext context) {
     const double edgeInsets = 10;
 
-    double destNameWidth =
-        calcTextSize(rideData.destName, const TextStyle(fontSize: 12)).width;
+    double destNameWidth = calcTextWidth(rideData.destName);
 
     double arrowEnd = (destNameWidth < _txtInfoMaxWidth)
         ? MediaQuery.of(context).size.width -
             2 * lateralPadding -
             2 * edgeInsets -
             20 -
-            calcTextSize(rideData.originName, const TextStyle(fontSize: 12))
-                .width -
+            calcTextWidth(rideData.originName) -
             destNameWidth
         : _txtInfoMaxWidth - 20;
 
@@ -157,8 +155,6 @@ class WaitingRoomScreen extends StatelessWidget {
           acceptedRideRequests.remove(state.passengerEmail);
         }
 
-        print(acceptedRideRequests);
-
         return ListView.builder(
           shrinkWrap: true,
           itemCount: acceptedRideRequests.length,
@@ -220,5 +216,10 @@ class WaitingRoomScreen extends StatelessWidget {
         style: TextStyle(color: color, fontSize: fontSize),
       ),
     );
+  }
+
+  double calcTextWidth(String info) {
+    double textWidth = calcTextSize(info, const TextStyle(fontSize: 12)).width;
+    return textWidth > _txtInfoMaxWidth ? _txtInfoMaxWidth : textWidth;
   }
 }
