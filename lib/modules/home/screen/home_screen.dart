@@ -124,7 +124,7 @@ class HomeScreen extends StatelessWidget {
         } else if (state is InsertRideRecordState) {
           rides[state.rideData.driver.email] = state.rideData;
         } else if (state is RemoveRideRecordState) {
-          rides.remove(state.rideData.driver.email);
+          rides.remove(state.rideId);
         }
 
         return ListView.builder(

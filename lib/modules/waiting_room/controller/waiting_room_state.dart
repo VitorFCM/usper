@@ -20,3 +20,5 @@ class RequestCancelledState extends WaitingRoomState {
   RequestCancelledState({required this.passengerEmail});
   String passengerEmail;
 }
+
+class RequestRefusedState extends WaitingRoomState {}

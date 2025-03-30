@@ -57,7 +57,8 @@ class Application extends StatelessWidget {
           BlocProvider(
               create: (context) => WaitingRoomController(
                   repositoryService: repositoryService,
-                  user: BlocProvider.of<LoginController>(context).user!)),
+                  user: BlocProvider.of<LoginController>(context).user!,
+                  homeController: BlocProvider.of<HomeController>(context))),
           BlocProvider(
               create: (context) => PassengersSelectionController(
                   repositoryService: repositoryService))

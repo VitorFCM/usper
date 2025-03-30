@@ -9,9 +9,9 @@ class RideCreated extends HomeScreenEvent {
   RideData rideData;
 }
 
-class RideUpdatedOrDeleted extends HomeScreenEvent {
-  RideUpdatedOrDeleted({required this.rideData});
-  RideData rideData;
+class RemoveRide extends HomeScreenEvent {
+  RemoveRide({required this.rideId});
+  String rideId;
 }
 
 class LoadInitialRides extends HomeScreenEvent {}

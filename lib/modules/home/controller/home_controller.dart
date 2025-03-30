@@ -12,7 +12,7 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
   HomeController({required this.repositoryService})
       : super(InitialHomeScreenState()) {
     on<RideCreated>(_provideNewRide);
-    on<RideUpdatedOrDeleted>(_updateRidesCollection);
+    on<RemoveRide>(_updateRidesCollection);
     on<LoadInitialRides>(_fetchAllAvaiableRides);
 
     repositoryService.rideDataStream().listen((rideDataEvent) {
@@ -21,7 +21,7 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
           add(RideCreated(rideData: rideDataEvent.value));
         case RideDataEventType.update:
         case RideDataEventType.delete:
-          add(RideUpdatedOrDeleted(rideData: rideDataEvent.value));
+          add(RemoveRide(rideId: rideDataEvent.value.driver.email));
       }
     });
 
@@ -32,9 +32,8 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
     emit(InsertRideRecordState(rideData: event.rideData));
   }
 
-  void _updateRidesCollection(
-      RideUpdatedOrDeleted event, Emitter<HomeScreenState> emit) {
-    emit(RemoveRideRecordState(rideData: event.rideData));
+  void _updateRidesCollection(RemoveRide event, Emitter<HomeScreenState> emit) {
+    emit(RemoveRideRecordState(rideId: event.rideId));
   }
 
   void _fetchAllAvaiableRides(

@@ -22,3 +22,5 @@ class RequestCancelled extends WaitingRoomEvent {
 }
 
 class CancelRideRequest extends WaitingRoomEvent {}
+
+class RequestRefused extends WaitingRoomEvent {}

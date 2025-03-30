@@ -12,8 +12,8 @@ class InsertRideRecordState extends HomeScreenState {
 }
 
 class RemoveRideRecordState extends HomeScreenState {
-  RemoveRideRecordState({required this.rideData});
-  RideData rideData;
+  RemoveRideRecordState({required this.rideId});
+  String rideId;
 }
 
 class InitialRidesLoaded extends HomeScreenState {

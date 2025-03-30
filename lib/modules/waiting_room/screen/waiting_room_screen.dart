@@ -9,6 +9,7 @@ import 'package:usper/utils/calc_text_size.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/arrow.dart';
 import 'package:usper/widgets/base_screen.dart';
+import 'package:usper/widgets/error_alert_dialog.dart';
 import 'package:usper/widgets/page_title.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/widgets/user_image.dart';
@@ -33,38 +34,50 @@ class WaitingRoomScreen extends StatelessWidget {
     if (passSectionHeight >= 400) passSectionHeight = 400;
 
     _txtInfoMaxWidth = MediaQuery.of(context).size.width * 0.3;
-    return BaseScreen(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: titleOcupation),
-            child: PageTitle(title: "Sala de Espera"),
-          ),
-          const SizedBox(height: 20),
-          rideInfoCard(controller.ride, context),
-          const SizedBox(height: 20),
-          const Text(
-            "Passageiros aprovados",
-            style: TextStyle(color: white, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 15),
-          ConstrainedBox(
-            constraints: BoxConstraints(
-                maxHeight: passSectionHeight, minHeight: passSectionHeight),
-            child: approvedPassengers(context),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 120),
-            child: Align(
-              alignment: Alignment.center,
-              child: button("Cancelar", white, buttonWidth, () {
-                controller.add(CancelRideRequest());
-                Navigator.pop(context);
-              }, Colors.black),
+    return BlocListener<WaitingRoomController, WaitingRoomState>(
+      listener: (context, state) {
+        if (state is RequestRefusedState) {
+          Navigator.popUntil(context, ModalRoute.withName('/home'));
+          showDialog(
+              context: context,
+              builder: (context) => const ErrorAlertDialog(
+                  errorMessage:
+                      "Infelizmente não foi possível te colocar nessa carona"));
+        }
+      },
+      child: BaseScreen(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: titleOcupation),
+              child: PageTitle(title: "Sala de Espera"),
             ),
-          )
-        ],
+            const SizedBox(height: 20),
+            rideInfoCard(controller.ride, context),
+            const SizedBox(height: 20),
+            const Text(
+              "Passageiros aprovados",
+              style: TextStyle(color: white, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 15),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                  maxHeight: passSectionHeight, minHeight: passSectionHeight),
+              child: approvedPassengers(context),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 120),
+              child: Align(
+                alignment: Alignment.center,
+                child: button("Cancelar", white, buttonWidth, () {
+                  controller.add(CancelRideRequest());
+                  Navigator.popUntil(context, ModalRoute.withName('/home'));
+                }, Colors.black),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

@@ -2,13 +2,17 @@ import 'package:bloc/bloc.dart';
 import 'package:usper/constants/ride_requests_event_type.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
+import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 
 part 'waiting_room_event.dart';
 part 'waiting_room_state.dart';
 
 class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
-  WaitingRoomController({required this.repositoryService, required this.user})
+  WaitingRoomController(
+      {required this.repositoryService,
+      required this.user,
+      required this.homeController})
       : super(InitialWaitingRoomState()) {
     on<CreateRideRequest>(_createRideRequest);
     on<FetchAcceptedRideRequests>(_fetchAcceptedRideRequests);
@@ -17,12 +21,14 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     on<RequestCancelled>((event, emit) =>
         emit(RequestCancelledState(passengerEmail: event.passengerEmail)));
     on<CancelRideRequest>(_cancelRideRequest);
+    on<RequestRefused>(_refuseRideRequest);
   }
 
   RepositoryInterface repositoryService;
   UsperUser user;
   late RideData ride;
   Map<String, UsperUser> acceptedRideRequests = {};
+  HomeController homeController;
 
   void _createRideRequest(
       CreateRideRequest event, Emitter<WaitingRoomState> emit) async {
@@ -41,8 +47,11 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
         case RideRequestsEventType.cancelled:
           add(RequestCancelled(passengerEmail: rideDataEvent.value as String));
         case RideRequestsEventType.refused:
-        // Check if the refused user is the current user, so he can leaves the waiting room
+          if (rideDataEvent.value as String == user.email) {
+            add(RequestRefused());
+          }
         case RideRequestsEventType.requested:
+        // Nothing to do
       }
     });
   }
@@ -68,5 +77,12 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       CancelRideRequest event, Emitter<WaitingRoomState> emit) async {
     _stopListeningRideRequests();
     await repositoryService.deleteRideRequest(ride.driver.email, user.email);
+  }
+
+  void _refuseRideRequest(
+      RequestRefused event, Emitter<WaitingRoomState> emit) {
+    _stopListeningRideRequests();
+    homeController.add(RemoveRide(rideId: ride.driver.email));
+    emit(RequestRefusedState());
   }
 }
