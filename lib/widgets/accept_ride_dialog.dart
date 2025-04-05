@@ -89,7 +89,10 @@ class AcceptRideDialog extends StatelessWidget {
       onPressed: () {
         controller.add(CreateRideRequest(ride: rideData));
         controller.add(FetchAcceptedRideRequests());
-        Navigator.pushNamed(context, "/waiting_room");
+        Navigator.pushNamed(context, "/waiting_room").then((value) {
+          controller.add(CancelRideRequest());
+          Navigator.pop(context);
+        });
       },
       style: TextButton.styleFrom(
           backgroundColor: yellow,
