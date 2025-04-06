@@ -8,6 +8,7 @@ import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/modules/ride_creation/vehicle_configuration_controller/vehicle_configuration_controller.dart';
 import 'package:usper/utils/get_nearest_color_name.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
+import 'package:usper/widgets/info_input_card.dart';
 import 'package:usper/widgets/text_dropdown_menu.dart';
 
 class VehicleInputAlertDialog extends StatelessWidget {
@@ -45,17 +46,17 @@ class VehicleInputAlertDialog extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                infoInput(
-                    "Placa",
-                    white,
-                    Pinput(
+                InfoInputCard(
+                    title: "Placa",
+                    color: white,
+                    inputWidget: Pinput(
                       controller: plateController,
                       length: 7,
                       keyboardType: TextInputType.text,
                       textCapitalization: TextCapitalization.characters,
                     ),
-                    Colors.black,
-                    350),
+                    textColor: Colors.black,
+                    minWidth: 350),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -95,10 +96,10 @@ class VehicleInputAlertDialog extends StatelessWidget {
         return current is VehicleColorSetted;
       }, builder: (context, state) {
         Color invertedColor = getInvertedColor(vehicleColor);
-        return infoInput(
-            "Cor",
-            invertedColor,
-            Row(
+        return InfoInputCard(
+            title: "Cor",
+            color: invertedColor,
+            inputWidget: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 mainAxisSize: MainAxisSize.max,
                 children: [
@@ -113,8 +114,9 @@ class VehicleInputAlertDialog extends StatelessWidget {
                     size: 40,
                   )
                 ]),
-            vehicleColor,
-            160);
+            textColor: vehicleColor,
+            minWidth: 160,
+            width: 120);
       }),
     );
   }
@@ -123,10 +125,10 @@ class VehicleInputAlertDialog extends StatelessWidget {
       VehicleConfigurationController vehicleConfigurationController) {
     int seatsCounter = 0;
 
-    return infoInput(
-        "Vagas",
-        white,
-        Row(
+    return InfoInputCard(
+        title: "Vagas",
+        color: white,
+        inputWidget: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             IconButton(
@@ -159,19 +161,20 @@ class VehicleInputAlertDialog extends StatelessWidget {
                 )),
           ],
         ),
-        Colors.black,
-        160);
+        textColor: Colors.black,
+        minWidth: 160,
+        width: 120);
   }
 
   Widget vehicleTypeSection(
       VehicleConfigurationController vehicleConfigurationController) {
     vehicleConfigurationController.add(VehicleTypeSwitched(true));
 
-    return infoInput(
-        "Tipo de Veiculo",
-        yellow,
-        BlocBuilder<VehicleConfigurationController, VehicleConfigurationState>(
-            buildWhen: (previous, current) {
+    return InfoInputCard(
+        title: "Tipo de Veiculo",
+        color: yellow,
+        inputWidget: BlocBuilder<VehicleConfigurationController,
+            VehicleConfigurationState>(buildWhen: (previous, current) {
           return current is VehicleMakersRetrieved;
         }, builder: (context, state) {
           bool isCar = state is VehicleMakersRetrieved && state.isCar;
@@ -213,17 +216,17 @@ class VehicleInputAlertDialog extends StatelessWidget {
             ],
           );
         }),
-        Colors.black,
-        160,
+        textColor: Colors.black,
+        minWidth: 160,
         width: 120);
   }
 
   Widget vehicleModelSection(
       VehicleConfigurationController vehicleConfigurationController) {
-    return infoInput(
-        "Modelo do Veiculo",
-        Colors.black,
-        Row(
+    return InfoInputCard(
+        title: "Modelo do Veiculo",
+        color: Colors.black,
+        inputWidget: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             BlocBuilder<VehicleConfigurationController,
@@ -256,8 +259,8 @@ class VehicleInputAlertDialog extends StatelessWidget {
             })
           ],
         ),
-        white,
-        160);
+        textColor: white,
+        minWidth: 160);
   }
 
   TextButton button(String title, Color textColor, double minWidth,
@@ -334,42 +337,6 @@ class VehicleInputAlertDialog extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  Widget infoInput(String title, Color color, Widget inputWidget,
-      Color textColor, double minWidth,
-      {double? width}) {
-    return Container(
-      constraints: BoxConstraints(minWidth: minWidth),
-      width: width,
-      height: 80,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: color,
-      ),
-      padding: const EdgeInsets.only(top: 0, left: 10, right: 10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: Text(
-              title,
-              style: TextStyle(color: textColor, fontSize: 12),
-            ),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          Container(
-            height: 40,
-            alignment: Alignment.center,
-            child: inputWidget,
-          )
-        ],
-      ),
     );
   }
 }

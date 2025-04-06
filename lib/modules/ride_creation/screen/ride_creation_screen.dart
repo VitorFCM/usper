@@ -9,6 +9,7 @@ import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
 import 'package:usper/widgets/expandable_map_widget.dart';
 import 'package:usper/widgets/base_screen.dart';
+import 'package:usper/widgets/info_input_card.dart';
 import 'package:usper/widgets/page_title.dart';
 import 'package:usper/widgets/set_location_alert_dialog.dart';
 import 'package:usper/widgets/vehicle_selection.dart';
@@ -85,10 +86,10 @@ class RideCreationScreen extends StatelessWidget {
                                   .add(SetDepartureTime(selectedTime));
                             }
                           },
-                          child: infoInput(
-                              "Horario de Partida",
-                              yellow,
-                              BlocBuilder<RideCreationController,
+                          child: InfoInputCard(
+                              title: "Horario de Partida",
+                              color: yellow,
+                              inputWidget: BlocBuilder<RideCreationController,
                                   RideCreationState>(
                                 buildWhen: (previous, current) {
                                   return current is DepartureTimeSetted;
@@ -102,8 +103,8 @@ class RideCreationScreen extends StatelessWidget {
                                   }
                                 },
                               ),
-                              Colors.black,
-                              550),
+                              textColor: Colors.black,
+                              minWidth: 550),
                         )),
                         const SizedBox(width: 10),
                         Expanded(
@@ -114,10 +115,11 @@ class RideCreationScreen extends StatelessWidget {
                                     context: context,
                                     builder: (context) => VehicleSelection());
                               },
-                              child: infoInput(
-                                  "Veículo",
-                                  Colors.black,
-                                  BlocBuilder<RideCreationController,
+                              child: InfoInputCard(
+                                  title: "Veículo",
+                                  color: Colors.black,
+                                  inputWidget: BlocBuilder<
+                                          RideCreationController,
                                           RideCreationState>(
                                       buildWhen: (previous, current) {
                                     return current is RideVehicleDefined;
@@ -134,8 +136,8 @@ class RideCreationScreen extends StatelessWidget {
                                       size: 40,
                                     );
                                   }),
-                                  white,
-                                  150),
+                                  textColor: white,
+                                  minWidth: 150),
                             )),
                       ],
                     ),
@@ -191,36 +193,6 @@ class RideCreationScreen extends StatelessWidget {
       child: Text(
         title,
         style: TextStyle(color: textColor, fontWeight: FontWeight.w400),
-      ),
-    );
-  }
-
-  Widget infoInput(String title, Color color, Widget inputWidget,
-      Color textColor, double minWidth) {
-    return Container(
-      constraints: BoxConstraints(minWidth: minWidth),
-      height: 70,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: color,
-      ),
-      padding: const EdgeInsets.only(top: 0, left: 10, right: 10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: Text(
-              title,
-              style: TextStyle(color: textColor, fontSize: 10),
-            ),
-          ),
-          Container(
-            height: 40,
-            alignment: Alignment.center,
-            child: inputWidget,
-          )
-        ],
       ),
     );
   }
