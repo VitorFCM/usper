@@ -9,8 +9,6 @@ class CreateRideRequest extends WaitingRoomEvent {
   CreateRideRequest({required this.ride});
 }
 
-class FetchAcceptedRideRequests extends WaitingRoomEvent {}
-
 class NewRequestAccepted extends WaitingRoomEvent {
   NewRequestAccepted({required this.passenger});
   UsperUser passenger;
@@ -24,3 +22,16 @@ class RequestCancelled extends WaitingRoomEvent {
 class CancelRideRequest extends WaitingRoomEvent {}
 
 class RequestRefused extends WaitingRoomEvent {}
+
+class ClearState extends WaitingRoomEvent {}
+
+class DeleteOldRequestAndCreateNew extends WaitingRoomEvent {
+  DeleteOldRequestAndCreateNew({required this.oldRide, required this.newRide});
+  RideData oldRide;
+  RideData newRide;
+}
+
+class KeepOldRequest extends WaitingRoomEvent {
+  KeepOldRequest({required this.oldRide});
+  RideData oldRide;
+}

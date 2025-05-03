@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
+import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/accept_ride_dialog.dart';
 import 'package:usper/widgets/ride_info.dart';
@@ -19,8 +21,10 @@ class AvlRideCard extends StatelessWidget {
         onTap: () => {
               showDialog(
                   context: context,
-                  builder: (context) => AcceptRideDialog(
-                      driver: rideData.driver, rideData: rideData))
+                  builder: (context) =>
+                      AcceptRideDialog(rideData: rideData)).then((value) =>
+                  BlocProvider.of<WaitingRoomController>(context)
+                      .add(ClearState()))
             },
         child: Container(
             decoration: BoxDecoration(

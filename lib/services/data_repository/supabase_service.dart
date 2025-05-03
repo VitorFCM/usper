@@ -8,6 +8,7 @@ import 'package:usper/constants/ride_requests_event_type.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
+import 'package:usper/services/data_repository/repository_exceptions.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 import 'package:usper/utils/database/delete_data.dart';
 import 'package:usper/utils/database/fetch_data.dart';
@@ -84,6 +85,13 @@ class SupabaseService implements RepositoryInterface {
       "dest_longitude": ride.destCoord.longitude,
       "depart_time": ride.departTime.toIso8601String()
     });
+  }
+
+  @override
+  Future<RideData> getRide(String rideId) async {
+    List<Map<String, dynamic>> rawList =
+        await fetchData(DatabaseTables.rides, {"driver_email": rideId});
+    return await _createRideDataByRawRecord(rawList[0]);
   }
 
   @override
@@ -200,13 +208,22 @@ class SupabaseService implements RepositoryInterface {
 
   @override
   Future<void> insertRideRequest(RideData ride, UsperUser passenger) async {
+    List<Map<String, dynamic>> rawList = await fetchData(
+        DatabaseTables.ride_requests,
+        {"passenger_email": passenger.email, "!accepted": false});
+
+    if (rawList.isNotEmpty && rawList[0]["driver_email"] != ride.driver.email) {
+      throw PassengerAlreadyRequestedARideException(
+          rideId: rawList[0]["driver_email"]);
+    }
+
     try {
       await insertData(DatabaseTables.ride_requests, {
         "driver_email": ride.driver.email,
         "passenger_email": passenger.email
       });
-    } catch (e) {
-      print(e);
+    } on PostgrestException catch (e) {
+      if (e.code != null && "23505".compareTo(e.code!) != 0) rethrow;
     }
   }
 

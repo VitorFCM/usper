@@ -6,6 +6,8 @@ sealed class WaitingRoomState {
 
 class InitialWaitingRoomState extends WaitingRoomState {}
 
+class RideRequestCreated extends WaitingRoomState {}
+
 class AllAcceptedRequests extends WaitingRoomState {
   AllAcceptedRequests({required this.acceptedRequests});
   Map<String, UsperUser> acceptedRequests;
@@ -22,3 +24,10 @@ class RequestCancelledState extends WaitingRoomState {
 }
 
 class RequestRefusedState extends WaitingRoomState {}
+
+class Loading extends WaitingRoomState {}
+
+class PassengerAlreadyHaveARequest extends WaitingRoomState {
+  PassengerAlreadyHaveARequest({required this.ride});
+  RideData ride;
+}

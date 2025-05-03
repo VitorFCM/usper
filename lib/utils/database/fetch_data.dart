@@ -8,10 +8,14 @@ Future<List<Map<String, dynamic>>> fetchData(
   var query = supabase.from(table.name).select();
 
   matchCondition.forEach((key, value) {
-    if (value == null) {
-      query = query.filter(key, "eq", null);
+    if (key.startsWith('!')) {
+      query = query.not(key.substring(1), 'is', value);
     } else {
-      query = query.match({key: value});
+      if (value == null) {
+        query = query.isFilter(key, null);
+      } else {
+        query = query.match({key: value});
+      }
     }
   });
 

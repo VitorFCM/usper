@@ -3,6 +3,7 @@ import 'package:usper/constants/ride_requests_event_type.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
+import 'package:usper/services/data_repository/repository_exceptions.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 
 part 'waiting_room_event.dart';
@@ -15,13 +16,15 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       required this.homeController})
       : super(InitialWaitingRoomState()) {
     on<CreateRideRequest>(_createRideRequest);
-    on<FetchAcceptedRideRequests>(_fetchAcceptedRideRequests);
     on<NewRequestAccepted>((event, emit) =>
         emit(NewRequestAcceptedState(passenger: event.passenger)));
     on<RequestCancelled>((event, emit) =>
         emit(RequestCancelledState(passengerEmail: event.passengerEmail)));
     on<CancelRideRequest>(_cancelRideRequest);
     on<RequestRefused>(_refuseRideRequest);
+    on<ClearState>((event, emit) => emit(InitialWaitingRoomState()));
+    on<DeleteOldRequestAndCreateNew>(_deleteOldRequestAndCreateNew);
+    on<KeepOldRequest>(_keepOldRequest);
   }
 
   RepositoryInterface repositoryService;
@@ -32,8 +35,43 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
 
   void _createRideRequest(
       CreateRideRequest event, Emitter<WaitingRoomState> emit) async {
-    ride = event.ride;
-    await repositoryService.insertRideRequest(ride, user);
+    emit(Loading());
+
+    try {
+      await repositoryService.insertRideRequest(event.ride, user);
+      ride = event.ride;
+      emit(RideRequestCreated());
+      await _fetchAcceptedRideRequests(emit);
+      _startListeningRideRequests();
+    } on PassengerAlreadyRequestedARideException catch (e) {
+      emit(PassengerAlreadyHaveARequest(
+          ride: await repositoryService.getRide(e.rideId)));
+    }
+  }
+
+  void _deleteOldRequestAndCreateNew(DeleteOldRequestAndCreateNew event,
+      Emitter<WaitingRoomState> emit) async {
+    emit(Loading());
+
+    try {
+      await repositoryService.deleteRideRequest(
+          event.oldRide.driver.email, user.email);
+      await repositoryService.insertRideRequest(event.newRide, user);
+      ride = event.newRide;
+      emit(RideRequestCreated());
+      await _fetchAcceptedRideRequests(emit);
+      _startListeningRideRequests();
+    } on PassengerAlreadyRequestedARideException catch (e) {
+      emit(PassengerAlreadyHaveARequest(
+          ride: await repositoryService.getRide(e.rideId)));
+    }
+  }
+
+  void _keepOldRequest(
+      KeepOldRequest event, Emitter<WaitingRoomState> emit) async {
+    ride = event.oldRide;
+    emit(RideRequestCreated());
+    await _fetchAcceptedRideRequests(emit);
     _startListeningRideRequests();
   }
 
@@ -60,8 +98,8 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     repositoryService.stopRideRequestsStream();
   }
 
-  void _fetchAcceptedRideRequests(
-      FetchAcceptedRideRequests event, Emitter<WaitingRoomState> emit) async {
+  Future<void> _fetchAcceptedRideRequests(
+      Emitter<WaitingRoomState> emit) async {
     List<MapEntry<bool?, UsperUser>> rideRequests =
         await repositoryService.fetchAllRideRequests(ride.driver.email);
 
