@@ -31,13 +31,13 @@ class PassengersSelectionController
     repositoryService.startRideRequestsStream(rideId).listen((rideDataEvent) {
       switch (rideDataEvent.key) {
         case RideRequestsEventType.accepted:
-          add(RequestAccepted(passenger: rideDataEvent.value as UsperUser));
+          break;
         case RideRequestsEventType.cancelled:
           add(RequestCancelled(passengerEmail: rideDataEvent.value as String));
         case RideRequestsEventType.requested:
           add(RequestCreated(passenger: rideDataEvent.value as UsperUser));
         case RideRequestsEventType.refused:
-          add(RequestRefused(passengerEmail: rideDataEvent.value as String));
+          break;
       }
     });
   }
