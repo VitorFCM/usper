@@ -17,12 +17,25 @@ class VehicleInputAlertDialog extends StatelessWidget {
   Color vehicleColor = white;
   String colorName = "";
 
+  static const double dialogInsetPadding = 16;
+  static const double dialogContentPadding = 10;
+  static const double spaceBetweenColorAndPlaces = 10;
+  static const double placesMinWidth = 160;
+  static const double vehicleTypeMinWidth = 160;
+  late double equalWidth;
+
   @override
   Widget build(BuildContext context) {
     VehicleConfigurationController vehicleConfigurationController =
         BlocProvider.of<VehicleConfigurationController>(context);
 
     TextEditingController plateController = TextEditingController();
+
+    equalWidth = (MediaQuery.of(context).size.width -
+            2 * dialogInsetPadding -
+            spaceBetweenColorAndPlaces -
+            2 * dialogContentPadding) /
+        2;
 
     return BlocListener<VehicleConfigurationController,
         VehicleConfigurationState>(
@@ -37,12 +50,13 @@ class VehicleInputAlertDialog extends StatelessWidget {
         }
       },
       child: Dialog(
-          insetPadding: const EdgeInsets.only(right: 16.0, left: 16.0),
+          insetPadding: const EdgeInsets.only(
+              right: dialogInsetPadding, left: dialogInsetPadding),
           shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(12.0))),
           backgroundColor: blue,
           child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(dialogContentPadding),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -62,7 +76,7 @@ class VehicleInputAlertDialog extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     colorSelectorSection(context),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: spaceBetweenColorAndPlaces),
                     seatsCounterSection(vehicleConfigurationController),
                   ],
                 ),
@@ -97,26 +111,29 @@ class VehicleInputAlertDialog extends StatelessWidget {
       }, builder: (context, state) {
         Color invertedColor = getInvertedColor(vehicleColor);
         return InfoInputCard(
-            title: "Cor",
-            color: invertedColor,
-            inputWidget: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Text(
-                    colorName,
-                    style: TextStyle(
-                        color: vehicleColor, fontWeight: FontWeight.w400),
-                  ),
-                  Icon(
-                    Icons.directions_car,
-                    color: vehicleColor,
-                    size: 40,
-                  )
-                ]),
-            textColor: vehicleColor,
-            minWidth: 160,
-            width: 120);
+          title: "Cor",
+          color: invertedColor,
+          inputWidget: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Text(
+                  colorName,
+                  style: TextStyle(
+                      color: vehicleColor, fontWeight: FontWeight.w400),
+                ),
+                Icon(
+                  Icons.directions_car,
+                  color: vehicleColor,
+                  size: 40,
+                )
+              ]),
+          textColor: vehicleColor,
+          minWidth: 40,
+          width: (equalWidth < placesMinWidth)
+              ? equalWidth * 2 - placesMinWidth
+              : equalWidth,
+        );
       }),
     );
   }
@@ -162,8 +179,8 @@ class VehicleInputAlertDialog extends StatelessWidget {
           ],
         ),
         textColor: Colors.black,
-        minWidth: 160,
-        width: 120);
+        minWidth: placesMinWidth,
+        width: equalWidth);
   }
 
   Widget vehicleTypeSection(
@@ -217,8 +234,8 @@ class VehicleInputAlertDialog extends StatelessWidget {
           );
         }),
         textColor: Colors.black,
-        minWidth: 160,
-        width: 120);
+        minWidth: vehicleTypeMinWidth,
+        width: vehicleTypeMinWidth);
   }
 
   Widget vehicleModelSection(
