@@ -12,7 +12,7 @@ abstract interface class RepositoryInterface {
   Future<void> deleteRide(String rideId);
   Future<List<Vehicle>> fetchVehiclesByOwner(String ownerId);
   Future<Map<String, RideData>> fetchAllAvaiableRides();
-  Stream<MapEntry<RideDataEventType, RideData>> rideDataStream();
+  Stream<MapEntry<RideDataEventType, RideData>> avaiableRidesStream();
   Future<void> updateUser(final UsperUser user);
   Future<void> insertRideRequest(
       final RideData ride, final UsperUser passenger);
@@ -24,4 +24,6 @@ abstract interface class RepositoryInterface {
   Future<void> deleteRideRequest(String driverId, String passengerId);
   Future<void> acceptRideRequest(String driverId, String passengerId);
   Future<void> refuseRideRequest(String driverId, String passengerId);
+  Stream<RideDataEventType> startRideEventsStream(String rideId);
+  void stopRideEventsStream();
 }

@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:usper/constants/ride_data_event_type.dart';
 import 'package:usper/constants/ride_requests_event_type.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
@@ -25,6 +26,8 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     on<ClearState>((event, emit) => emit(InitialWaitingRoomState()));
     on<DeleteOldRequestAndCreateNew>(_deleteOldRequestAndCreateNew);
     on<KeepOldRequest>(_keepOldRequest);
+    //on<RideStarted>(),
+    on<RideCanceled>(_rideCanceled);
   }
 
   RepositoryInterface repositoryService;
@@ -42,10 +45,13 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       ride = event.ride;
       emit(RideRequestCreated());
       await _fetchAcceptedRideRequests(emit);
-      _startListeningRideRequests();
+      _startListeningRideEvents();
     } on PassengerAlreadyRequestedARideException catch (e) {
       emit(PassengerAlreadyHaveARequest(
           ride: await repositoryService.getRide(e.rideId)));
+    } on RideWasAlreadyDeleted {
+      emit(ErrorMessage(
+          message: "Parece que o motorista desistiu de oferecer a carona"));
     }
   }
 
@@ -60,7 +66,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       ride = event.newRide;
       emit(RideRequestCreated());
       await _fetchAcceptedRideRequests(emit);
-      _startListeningRideRequests();
+      _startListeningRideEvents();
     } on PassengerAlreadyRequestedARideException catch (e) {
       emit(PassengerAlreadyHaveARequest(
           ride: await repositoryService.getRide(e.rideId)));
@@ -72,30 +78,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     ride = event.oldRide;
     emit(RideRequestCreated());
     await _fetchAcceptedRideRequests(emit);
-    _startListeningRideRequests();
-  }
-
-  void _startListeningRideRequests() {
-    repositoryService
-        .startRideRequestsStream(ride.driver.email)
-        .listen((rideDataEvent) {
-      switch (rideDataEvent.key) {
-        case RideRequestsEventType.accepted:
-          add(NewRequestAccepted(passenger: rideDataEvent.value as UsperUser));
-        case RideRequestsEventType.cancelled:
-          add(RequestCancelled(passengerEmail: rideDataEvent.value as String));
-        case RideRequestsEventType.refused:
-          if (rideDataEvent.value as String == user.email) {
-            add(RequestRefused());
-          }
-        case RideRequestsEventType.requested:
-        // Nothing to do
-      }
-    });
-  }
-
-  void _stopListeningRideRequests() {
-    repositoryService.stopRideRequestsStream();
+    _startListeningRideEvents();
   }
 
   Future<void> _fetchAcceptedRideRequests(
@@ -113,14 +96,62 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
 
   void _cancelRideRequest(
       CancelRideRequest event, Emitter<WaitingRoomState> emit) async {
-    _stopListeningRideRequests();
+    _stopListeningRideEvents();
     await repositoryService.deleteRideRequest(ride.driver.email, user.email);
   }
 
   void _refuseRideRequest(
       RequestRefused event, Emitter<WaitingRoomState> emit) {
-    _stopListeningRideRequests();
+    _stopListeningRideEvents();
     homeController.add(RemoveRide(rideId: ride.driver.email));
-    emit(RequestRefusedState());
+    emit(ErrorMessage(
+        message: "Infelizmente não foi possível te colocar nessa carona"));
+  }
+
+  void _rideCanceled(RideCanceled event, Emitter<WaitingRoomState> emit) {
+    _stopListeningRideEvents();
+    homeController.add(RemoveRide(rideId: ride.driver.email));
+    emit(ErrorMessage(
+        message: "Parece que o motorista desistiu de oferecer a carona"));
+  }
+
+  void _startListeningRideEvents() {
+    repositoryService
+        .startRideEventsStream(ride.driver.email)
+        .listen((rideDataEvent) {
+      switch (rideDataEvent) {
+        case RideDataEventType.created:
+          break;
+        case RideDataEventType.started:
+          add(RideStarted());
+        case RideDataEventType.deleted:
+          add(RideCanceled());
+      }
+    });
+
+    repositoryService
+        .startRideRequestsStream(ride.driver.email)
+        .listen((rideDataEvent) {
+      switch (rideDataEvent.key) {
+        case RideRequestsEventType.accepted:
+          add(NewRequestAccepted(passenger: rideDataEvent.value as UsperUser));
+        case RideRequestsEventType.cancelled:
+          if (rideDataEvent.value as String != user.email) {
+            add(RequestCancelled(
+                passengerEmail: rideDataEvent.value as String));
+          }
+        case RideRequestsEventType.refused:
+          if (rideDataEvent.value as String == user.email) {
+            add(RequestRefused());
+          }
+        case RideRequestsEventType.requested:
+        // Nothing to do
+      }
+    });
+  }
+
+  void _stopListeningRideEvents() {
+    repositoryService.stopRideEventsStream();
+    repositoryService.stopRideRequestsStream();
   }
 }

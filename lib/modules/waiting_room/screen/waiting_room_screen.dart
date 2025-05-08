@@ -31,18 +31,18 @@ class WaitingRoomScreen extends StatelessWidget {
     _txtInfoMaxWidth = MediaQuery.of(context).size.width * 0.3;
     return BlocListener<WaitingRoomController, WaitingRoomState>(
       listener: (context, state) {
-        if (state is RequestRefusedState) {
+        if (state is ErrorMessage) {
           Navigator.popUntil(context, ModalRoute.withName('/home'));
           showDialog(
               context: context,
-              builder: (context) => const ErrorAlertDialog(
-                  errorMessage:
-                      "Infelizmente não foi possível te colocar nessa carona"));
+              builder: (context) =>
+                  ErrorAlertDialog(errorMessage: state.message));
         }
       },
       child: BaseScreen(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             ConstrainedBox(
               constraints: BoxConstraints(maxWidth: titleOcupation),
@@ -62,7 +62,7 @@ class WaitingRoomScreen extends StatelessWidget {
               child: approvedPassengers(context),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 120),
+              padding: const EdgeInsets.only(top: 50),
               child: Align(
                 alignment: Alignment.center,
                 child: button("Cancelar", white, buttonWidth, () {

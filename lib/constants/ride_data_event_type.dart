@@ -1,1 +1,1 @@
-enum RideDataEventType { insert, update, delete }
+enum RideDataEventType { created, started, deleted }

@@ -5,6 +5,7 @@ import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/changing_text_widget.dart';
+import 'package:usper/widgets/error_alert_dialog.dart';
 import 'package:usper/widgets/loading_widget.dart';
 import 'package:usper/widgets/ride_info.dart';
 import 'package:usper/widgets/ride_info_card.dart';
@@ -31,6 +32,8 @@ class AcceptRideDialog extends StatelessWidget {
           return waitingDialog();
         } else if (state is PassengerAlreadyHaveARequest) {
           return oldRide(context, state.ride);
+        } else if (state is ErrorMessage) {
+          return ErrorAlertDialog(errorMessage: state.message);
         }
         return rideInfo(context);
       },

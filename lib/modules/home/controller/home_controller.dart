@@ -15,12 +15,12 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
     on<RemoveRide>(_updateRidesCollection);
     on<LoadInitialRides>(_fetchAllAvaiableRides);
 
-    repositoryService.rideDataStream().listen((rideDataEvent) {
+    repositoryService.avaiableRidesStream().listen((rideDataEvent) {
       switch (rideDataEvent.key) {
-        case RideDataEventType.insert:
+        case RideDataEventType.created:
           add(RideCreated(rideData: rideDataEvent.value));
-        case RideDataEventType.update:
-        case RideDataEventType.delete:
+        case RideDataEventType.started:
+        case RideDataEventType.deleted:
           add(RemoveRide(rideId: rideDataEvent.value.driver.email));
       }
     });

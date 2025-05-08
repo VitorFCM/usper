@@ -23,11 +23,14 @@ class RequestCancelledState extends WaitingRoomState {
   String passengerEmail;
 }
 
-class RequestRefusedState extends WaitingRoomState {}
-
 class Loading extends WaitingRoomState {}
 
 class PassengerAlreadyHaveARequest extends WaitingRoomState {
   PassengerAlreadyHaveARequest({required this.ride});
   RideData ride;
+}
+
+class ErrorMessage extends WaitingRoomState {
+  ErrorMessage({required this.message});
+  String message;
 }
