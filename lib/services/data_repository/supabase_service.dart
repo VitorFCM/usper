@@ -95,6 +95,11 @@ class SupabaseService implements RepositoryInterface {
   }
 
   @override
+  Future<void> deleteRide(String rideId) async {
+    await deleteData(DatabaseTables.rides, {"driver_email": rideId});
+  }
+
+  @override
   Future<Map<String, RideData>> fetchAllAvaiableRides() async {
     if (allAvailableRides != null) {
       return allAvailableRides!;

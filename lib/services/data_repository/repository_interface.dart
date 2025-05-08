@@ -9,6 +9,7 @@ abstract interface class RepositoryInterface {
   Future<void> insertVehicle(Vehicle vehicle, UsperUser user);
   Future<void> insertRide(RideData ride);
   Future<RideData> getRide(String rideId);
+  Future<void> deleteRide(String rideId);
   Future<List<Vehicle>> fetchVehiclesByOwner(String ownerId);
   Future<Map<String, RideData>> fetchAllAvaiableRides();
   Stream<MapEntry<RideDataEventType, RideData>> rideDataStream();

@@ -25,3 +25,5 @@ class RequestRefusedState extends PassengersSelectionState {
   RequestRefusedState({required this.passengerEmail});
   String passengerEmail;
 }
+
+class RideCanceledState extends PassengersSelectionState {}

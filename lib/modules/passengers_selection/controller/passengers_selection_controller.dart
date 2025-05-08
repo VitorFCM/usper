@@ -21,6 +21,7 @@ class PassengersSelectionController
     on<RequestCreated>(
         (event, emit) => emit(RequestCreatedState(passenger: event.passenger)));
     on<RequestRefused>(_refusePassenger);
+    on<CancelRide>(_cancelRide);
   }
 
   RepositoryInterface repositoryService;
@@ -54,6 +55,13 @@ class PassengersSelectionController
     repositoryService.refuseRideRequest(
         ride.driver.email, event.passengerEmail);
     emit(RequestRefusedState(passengerEmail: event.passengerEmail));
+  }
+
+  void _cancelRide(
+      CancelRide event, Emitter<PassengersSelectionState> emit) async {
+    _stopListeningRideRequests();
+    await repositoryService.deleteRide(ride.driver.email);
+    emit(RideCanceledState());
   }
 
   void _stopListeningRideRequests() {

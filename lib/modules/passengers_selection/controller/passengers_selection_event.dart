@@ -28,3 +28,5 @@ class RequestRefused extends PassengersSelectionEvent {
   RequestRefused({required this.passengerEmail});
   String passengerEmail;
 }
+
+class CancelRide extends PassengersSelectionEvent {}
