@@ -102,6 +102,8 @@ class PassengersSelScreen extends StatelessWidget {
           passengersAccepted.remove(state.passengerEmail);
         } else if (state is RequestAcceptedState) {
           passengersAccepted[state.passenger.email] = state.passenger;
+        } else if (state is PassengersRetrievedState) {
+          passengersAccepted = state.approved;
         }
 
         return ListView.builder(
@@ -135,6 +137,8 @@ class PassengersSelScreen extends StatelessWidget {
           passengersRequests.remove(state.passengerEmail);
         } else if (state is RequestAcceptedState) {
           passengersRequests.remove(state.passenger.email);
+        } else if (state is PassengersRetrievedState) {
+          passengersRequests = state.requests;
         }
 
         return ListView.builder(

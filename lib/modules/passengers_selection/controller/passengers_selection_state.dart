@@ -27,3 +27,9 @@ class RequestRefusedState extends PassengersSelectionState {
 }
 
 class RideCanceledState extends PassengersSelectionState {}
+
+class PassengersRetrievedState extends PassengersSelectionState {
+  PassengersRetrievedState({required this.approved, required this.requests});
+  Map<String, UsperUser> approved;
+  Map<String, UsperUser> requests;
+}

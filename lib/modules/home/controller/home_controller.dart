@@ -14,6 +14,11 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
     on<RideCreated>(_provideNewRide);
     on<RemoveRide>(_updateRidesCollection);
     on<LoadInitialRides>(_fetchAllAvaiableRides);
+    on<CreateRide>(_checkIfThereIsARide);
+    on<DeleteOldRideAndCreateNew>(_deleteOldRideAndCreateNew);
+    on<KeepOldRide>(
+      (event, emit) => emit(KeepOldRideState(oldRide: event.oldRide)),
+    );
 
     repositoryService.avaiableRidesStream().listen((rideDataEvent) {
       switch (rideDataEvent.key) {
@@ -40,5 +45,26 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
       LoadInitialRides event, Emitter<HomeScreenState> emit) async {
     emit(InitialRidesLoaded(
         rides: await repositoryService.fetchAllAvaiableRides()));
+  }
+
+  void _checkIfThereIsARide(
+      CreateRide event, Emitter<HomeScreenState> emit) async {
+    RideData? ride = await repositoryService.getRide(event.rideId);
+
+    if (ride != null) {
+      emit(UserAlreadyCreatedARide(ride: ride));
+    } else {
+      emit(FollowToRideCreation());
+    }
+  }
+
+  void _deleteOldRideAndCreateNew(
+      DeleteOldRideAndCreateNew event, Emitter<HomeScreenState> emit) async {
+    try {
+      await repositoryService.deleteRide(event.oldRideId);
+      emit(FollowToRideCreation());
+    } catch (e) {
+      emit(HomeStateError(errorMessage: e.toString()));
+    }
   }
 }

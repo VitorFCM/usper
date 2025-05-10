@@ -7,8 +7,8 @@ import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/changing_text_widget.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
 import 'package:usper/widgets/loading_widget.dart';
+import 'package:usper/widgets/ride_already_exists_dialog.dart';
 import 'package:usper/widgets/ride_info.dart';
-import 'package:usper/widgets/ride_info_card.dart';
 import 'package:usper/widgets/user_image.dart';
 
 class AcceptRideDialog extends StatelessWidget {
@@ -31,70 +31,19 @@ class AcceptRideDialog extends StatelessWidget {
         if (state is Loading) {
           return waitingDialog();
         } else if (state is PassengerAlreadyHaveARequest) {
-          return oldRide(context, state.ride);
+          return RideAlreadyExistsDialog(
+              title: "Parece que você já possui a seguinte carona em andamento",
+              oldRide: state.ride,
+              chooseOldRide: () =>
+                  controller.add(KeepOldRequest(oldRide: state.ride)),
+              chooseNewRide: () => controller.add(DeleteOldRequestAndCreateNew(
+                  oldRide: state.ride, newRide: rideData)));
         } else if (state is ErrorMessage) {
           return ErrorAlertDialog(errorMessage: state.message);
         }
         return rideInfo(context);
       },
     );
-  }
-
-  Dialog oldRide(BuildContext context, RideData oldRide) {
-    double buttonWidth = MediaQuery.of(context).size.width * 0.5;
-
-    return Dialog(
-        alignment: Alignment.center,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 10),
-        shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12.0))),
-        backgroundColor: lighterBlue,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Parece que você já possui a seguinte carona em andamento",
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w400),
-              ),
-              const SizedBox(
-                height: 30,
-              ),
-              RideInfoCard(rideData: oldRide),
-              Padding(
-                padding: const EdgeInsets.only(top: 30),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: button(
-                      "Carona nova",
-                      Colors.black,
-                      buttonWidth + 50,
-                      () => controller.add(DeleteOldRequestAndCreateNew(
-                          oldRide: oldRide, newRide: rideData)),
-                      yellow,
-                      10),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 15),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: button(
-                      "Carona antiga",
-                      white,
-                      buttonWidth,
-                      () => controller.add(KeepOldRequest(oldRide: oldRide)),
-                      Colors.black,
-                      10),
-                ),
-              )
-            ],
-          ),
-        ));
   }
 
   TextButton button(String title, Color textColor, double minWidth,

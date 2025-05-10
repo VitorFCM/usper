@@ -15,3 +15,18 @@ class RemoveRide extends HomeScreenEvent {
 }
 
 class LoadInitialRides extends HomeScreenEvent {}
+
+class CreateRide extends HomeScreenEvent {
+  CreateRide({required this.rideId});
+  String rideId;
+}
+
+final class DeleteOldRideAndCreateNew extends HomeScreenEvent {
+  DeleteOldRideAndCreateNew({required this.oldRideId});
+  String oldRideId;
+}
+
+final class KeepOldRide extends HomeScreenEvent {
+  KeepOldRide({required this.oldRide});
+  RideData oldRide;
+}

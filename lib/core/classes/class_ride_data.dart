@@ -10,6 +10,7 @@ class RideData {
   DateTime departTime;
   Vehicle vehicle;
   UsperUser driver;
+  bool? started;
 
   RideData(
       {required this.originName,
@@ -18,5 +19,6 @@ class RideData {
       required this.destCoord,
       required this.departTime,
       required this.vehicle,
-      required this.driver});
+      required this.driver,
+      this.started});
 }

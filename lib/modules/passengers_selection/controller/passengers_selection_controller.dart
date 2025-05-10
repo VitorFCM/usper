@@ -9,12 +9,12 @@ part 'passengers_selection_state.dart';
 
 class PassengersSelectionController
     extends Bloc<PassengersSelectionEvent, PassengersSelectionState> {
+  Map<String, UsperUser> approved = {};
+  Map<String, UsperUser> requests = {};
+
   PassengersSelectionController({required this.repositoryService})
       : super(InitialPassengersSelectionState()) {
-    on<SetRideData>((event, emit) {
-      ride = event.ride;
-      _startListeningRideRequests(ride.driver.email);
-    });
+    on<SetRideData>(_setRideData);
     on<RequestAccepted>(_acceptPassenger);
     on<RequestCancelled>((event, emit) =>
         emit(RequestCancelledState(passengerEmail: event.passengerEmail)));
@@ -26,21 +26,23 @@ class PassengersSelectionController
 
   RepositoryInterface repositoryService;
   late RideData ride;
-  Map<String, UsperUser> acceptedRideRequests = {};
 
-  void _startListeningRideRequests(String rideId) {
-    repositoryService.startRideRequestsStream(rideId).listen((rideDataEvent) {
-      switch (rideDataEvent.key) {
-        case RideRequestsEventType.accepted:
-          break;
-        case RideRequestsEventType.cancelled:
-          add(RequestCancelled(passengerEmail: rideDataEvent.value as String));
-        case RideRequestsEventType.requested:
-          add(RequestCreated(passenger: rideDataEvent.value as UsperUser));
-        case RideRequestsEventType.refused:
-          break;
+  void _setRideData(
+      SetRideData event, Emitter<PassengersSelectionState> emit) async {
+    ride = event.ride;
+    _startListeningRideRequests(ride.driver.email);
+
+    List<MapEntry<bool?, UsperUser>> rideRequests =
+        await repositoryService.fetchAllRideRequests(ride.driver.email);
+
+    for (var entry in rideRequests) {
+      if (entry.key == null) {
+        requests[entry.value.email] = entry.value;
+      } else if (entry.key!) {
+        approved[entry.value.email] = entry.value;
       }
-    });
+    }
+    emit(PassengersRetrievedState(approved: approved, requests: requests));
   }
 
   void _acceptPassenger(
@@ -61,7 +63,36 @@ class PassengersSelectionController
       CancelRide event, Emitter<PassengersSelectionState> emit) async {
     _stopListeningRideRequests();
     await repositoryService.deleteRide(ride.driver.email);
+    approved.clear();
+    requests.clear();
     emit(RideCanceledState());
+  }
+
+  void _startListeningRideRequests(String rideId) {
+    repositoryService.startRideRequestsStream(rideId).listen((rideDataEvent) {
+      switch (rideDataEvent.key) {
+        case RideRequestsEventType.accepted:
+          UsperUser passenger = rideDataEvent.value as UsperUser;
+          requests.remove(passenger.email);
+          approved[passenger.email] = passenger;
+          break;
+        case RideRequestsEventType.cancelled:
+          String passengerEmail = rideDataEvent.value as String;
+          requests.remove(passengerEmail);
+          approved.remove(passengerEmail);
+          add(RequestCancelled(passengerEmail: passengerEmail));
+        case RideRequestsEventType.requested:
+          UsperUser passenger = rideDataEvent.value as UsperUser;
+          requests[passenger.email] = passenger;
+          approved.remove(passenger.email);
+          add(RequestCreated(passenger: rideDataEvent.value as UsperUser));
+        case RideRequestsEventType.refused:
+          String passengerEmail = rideDataEvent.value as String;
+          requests.remove(passengerEmail);
+          approved.remove(passengerEmail);
+          break;
+      }
+    });
   }
 
   void _stopListeningRideRequests() {

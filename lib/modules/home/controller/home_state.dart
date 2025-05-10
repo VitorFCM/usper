@@ -20,3 +20,20 @@ class InitialRidesLoaded extends HomeScreenState {
   InitialRidesLoaded({required this.rides});
   Map<String, RideData> rides;
 }
+
+class UserAlreadyCreatedARide extends HomeScreenState {
+  UserAlreadyCreatedARide({required this.ride});
+  RideData ride;
+}
+
+class FollowToRideCreation extends HomeScreenState {}
+
+class HomeStateError extends HomeScreenState {
+  HomeStateError({required this.errorMessage});
+  String errorMessage;
+}
+
+class KeepOldRideState extends HomeScreenState {
+  KeepOldRideState({required this.oldRide});
+  RideData oldRide;
+}

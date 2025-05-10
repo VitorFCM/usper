@@ -5,9 +5,12 @@ import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
+import 'package:usper/modules/passengers_selection/controller/passengers_selection_controller.dart';
 import 'package:usper/widgets/avl_ride_card.dart';
 import 'package:usper/widgets/base_screen.dart';
+import 'package:usper/widgets/error_alert_dialog.dart';
 import 'package:usper/widgets/page_title.dart';
+import 'package:usper/widgets/ride_already_exists_dialog.dart';
 import 'package:usper/widgets/user_image.dart';
 import 'package:usper/widgets/usp_course_selector.dart';
 
@@ -50,34 +53,68 @@ class HomeScreen extends StatelessWidget {
       titleOcupation -= screenOcupation - MediaQuery.of(context).size.width;
     }
 
-    return BaseScreen(
-        child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    HomeController controller = BlocProvider.of<HomeController>(context);
+
+    return BlocListener<HomeController, HomeScreenState>(
+        listener: (context, state) {
+          if (state is FollowToRideCreation) {
+            Navigator.pushNamed(context, "/ride_creation");
+          } else if (state is UserAlreadyCreatedARide) {
+            showDialog(
+                context: context,
+                builder: (context) => RideAlreadyExistsDialog(
+                    title:
+                        "Parece que você já possui a seguinte carona em andamento",
+                    oldRide: state.ride,
+                    chooseOldRide: () =>
+                        controller.add(KeepOldRide(oldRide: state.ride)),
+                    chooseNewRide: () => controller.add(
+                        DeleteOldRideAndCreateNew(
+                            oldRideId: state.ride.driver.email))));
+          } else if (state is HomeStateError) {
+            showDialog(
+                context: context,
+                builder: (context) =>
+                    ErrorAlertDialog(errorMessage: state.errorMessage));
+          } else if (state is KeepOldRideState) {
+            if (state.oldRide.started ?? false) {
+              print("To do");
+              //Navigator.pushNamed(context, "/ride_dashboard");
+            } else {
+              BlocProvider.of<PassengersSelectionController>(context)
+                  .add(SetRideData(ride: state.oldRide));
+              Navigator.pushNamed(context, "/passengers_selection");
+            }
+          }
+        },
+        child: BaseScreen(
+            child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: titleOcupation),
-              child: PageTitle(title: "Para onde\nvamos, ${u.firstName}?"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: titleOcupation),
+                  child: PageTitle(title: "Para onde\nvamos, ${u.firstName}?"),
+                ),
+                UserImage(user: u, radius: imgRadius)
+              ],
             ),
-            UserImage(user: u, radius: imgRadius)
+            const SizedBox(height: 20),
+            textFormField(),
+            const SizedBox(height: 50),
+            rideCreationButton(context),
+            const SizedBox(height: 50),
+            const Text(
+              "Caronas disponíveis",
+              style: TextStyle(
+                  color: white, fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            availableRides(context)
           ],
-        ),
-        const SizedBox(height: 20),
-        textFormField(),
-        const SizedBox(height: 50),
-        rideCreationButton(context),
-        const SizedBox(height: 50),
-        const Text(
-          "Caronas disponíveis",
-          style: TextStyle(
-              color: white, fontSize: 15, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 20),
-        availableRides(context)
-      ],
-    ));
+        )));
   }
 
   TextFormField textFormField() {
@@ -100,7 +137,8 @@ class HomeScreen extends StatelessWidget {
 
   TextButton rideCreationButton(BuildContext context) {
     return TextButton(
-      onPressed: () => Navigator.pushNamed(context, "/ride_creation"),
+      onPressed: () => BlocProvider.of<HomeController>(context)
+          .add(CreateRide(rideId: u.email)),
       style: TextButton.styleFrom(
           backgroundColor: yellow,
           minimumSize: Size(MediaQuery.of(context).size.width, 50)),

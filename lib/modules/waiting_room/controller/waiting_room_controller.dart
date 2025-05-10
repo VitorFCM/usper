@@ -47,8 +47,11 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       await _fetchAcceptedRideRequests(emit);
       _startListeningRideEvents();
     } on PassengerAlreadyRequestedARideException catch (e) {
-      emit(PassengerAlreadyHaveARequest(
-          ride: await repositoryService.getRide(e.rideId)));
+      RideData? rideAlreadyRequested =
+          await repositoryService.getRide(e.rideId);
+      if (rideAlreadyRequested != null) {
+        emit(PassengerAlreadyHaveARequest(ride: rideAlreadyRequested));
+      } else {}
     } on RideWasAlreadyDeleted {
       emit(ErrorMessage(
           message: "Parece que o motorista desistiu de oferecer a carona"));
@@ -68,8 +71,8 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       await _fetchAcceptedRideRequests(emit);
       _startListeningRideEvents();
     } on PassengerAlreadyRequestedARideException catch (e) {
-      emit(PassengerAlreadyHaveARequest(
-          ride: await repositoryService.getRide(e.rideId)));
+      RideData? r = await repositoryService.getRide(e.rideId);
+      emit(PassengerAlreadyHaveARequest(ride: r!));
     }
   }
 

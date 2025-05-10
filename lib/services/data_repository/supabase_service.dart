@@ -89,10 +89,13 @@ class SupabaseService implements RepositoryInterface {
   }
 
   @override
-  Future<RideData> getRide(String rideId) async {
+  Future<RideData?> getRide(String rideId) async {
     List<Map<String, dynamic>> rawList =
         await fetchData(DatabaseTables.rides, {"driver_email": rideId});
-    return await _createRideDataByRawRecord(rawList[0]);
+
+    return rawList.isEmpty
+        ? null
+        : await _createRideDataByRawRecord(rawList[0]);
   }
 
   @override
@@ -153,14 +156,16 @@ class SupabaseService implements RepositoryInterface {
     UsperUser driver = await _fetchUser(record["driver_email"]);
 
     return RideData(
-        driver: driver,
-        originName: record["origin_name"],
-        destName: record["destination_name"],
-        originCoord:
-            LatLng(record["origin_latitude"], record["origin_longitude"]),
-        destCoord: LatLng(record["dest_latitude"], record["dest_longitude"]),
-        departTime: DateTime.parse(record["depart_time"]),
-        vehicle: vehiclesList[0]);
+      driver: driver,
+      originName: record["origin_name"],
+      destName: record["destination_name"],
+      originCoord:
+          LatLng(record["origin_latitude"], record["origin_longitude"]),
+      destCoord: LatLng(record["dest_latitude"], record["dest_longitude"]),
+      departTime: DateTime.parse(record["depart_time"]),
+      vehicle: vehiclesList[0],
+      started: record["started"],
+    );
   }
 
   Future<void> _init() async {
@@ -289,7 +294,6 @@ class SupabaseService implements RepositoryInterface {
           return MapEntry(RideRequestsEventType.refused,
               payload.newRecord["passenger_email"]);
         }
-
       case PostgresChangeEvent.delete:
         return MapEntry(RideRequestsEventType.cancelled,
             payload.oldRecord["passenger_email"]);
