@@ -75,17 +75,24 @@ class SupabaseService implements RepositoryInterface {
 
   @override
   Future<void> insertRide(RideData ride) async {
-    await insertData(DatabaseTables.rides, {
-      "driver_email": ride.driver.email,
-      "vehicle_plate": ride.vehicle.licensePlate,
-      "origin_name": ride.originName,
-      "destination_name": ride.destName,
-      "origin_latitude": ride.originCoord.latitude,
-      "origin_longitude": ride.originCoord.longitude,
-      "dest_latitude": ride.destCoord.latitude,
-      "dest_longitude": ride.destCoord.longitude,
-      "depart_time": ride.departTime.toIso8601String()
-    });
+    try {
+      await insertData(DatabaseTables.rides, {
+        "driver_email": ride.driver.email,
+        "vehicle_plate": ride.vehicle.licensePlate,
+        "origin_name": ride.originName,
+        "destination_name": ride.destName,
+        "origin_latitude": ride.originCoord.latitude,
+        "origin_longitude": ride.originCoord.longitude,
+        "dest_latitude": ride.destCoord.latitude,
+        "dest_longitude": ride.destCoord.longitude,
+        "depart_time": ride.departTime.toIso8601String()
+      });
+    } on PostgrestException catch (e) {
+      if (e.code != null && "23505".compareTo(e.code!) == 0) {
+        throw DriverAlreadyHaveARideException();
+      }
+      rethrow;
+    }
   }
 
   @override

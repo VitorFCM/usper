@@ -45,3 +45,8 @@ final class RideCreated extends RideCreationState {
 }
 
 final class RideDataCleared extends RideCreationState {}
+
+final class DriverAlreadyHaveARide extends RideCreationState {
+  DriverAlreadyHaveARide({required this.oldRide});
+  RideData oldRide;
+}

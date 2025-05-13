@@ -35,3 +35,13 @@ final class VehicleRideChosed extends RideCreationEvent {
 }
 
 final class RideCanceled extends RideCreationEvent {}
+
+final class DeleteOldRideAndCreateNew extends RideCreationEvent {
+  DeleteOldRideAndCreateNew({required this.oldRide});
+  RideData oldRide;
+}
+
+final class KeepOldRide extends RideCreationEvent {
+  KeepOldRide({required this.oldRide});
+  RideData oldRide;
+}

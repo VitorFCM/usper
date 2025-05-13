@@ -11,6 +11,7 @@ import 'package:usper/widgets/expandable_map_widget.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/info_input_card.dart';
 import 'package:usper/widgets/page_title.dart';
+import 'package:usper/widgets/ride_already_exists_dialog.dart';
 import 'package:usper/widgets/set_location_alert_dialog.dart';
 import 'package:usper/widgets/vehicle_selection.dart';
 
@@ -18,24 +19,45 @@ class RideCreationScreen extends StatelessWidget {
   RideCreationScreen({super.key});
 
   DateTime selectedTime = DateTime.now().add(const Duration(minutes: 10));
+  late RideCreationController _rideCreationController;
 
   @override
   Widget build(BuildContext context) {
     double titleOcupation = MediaQuery.of(context).size.width * 0.68;
-    RideCreationController rideCreationController =
-        BlocProvider.of<RideCreationController>(context);
+    _rideCreationController = BlocProvider.of<RideCreationController>(context);
 
     return BlocListener<RideCreationController, RideCreationState>(
       listener: (context, state) {
         if (state is RideCreationStateError) {
           showDialog(
               context: context,
-              builder: (context) =>
-                  ErrorAlertDialog(errorMessage: state.errorMessage));
+              builder: (context) {
+                return ErrorAlertDialog(
+                  errorMessage: state.errorMessage,
+                );
+              });
         } else if (state is RideCreated) {
-          BlocProvider.of<PassengersSelectionController>(context)
-              .add(SetRideData(ride: state.ride));
-          Navigator.popAndPushNamed(context, "/passengers_selection");
+          if (state.ride.started ?? false) {
+            print("To do");
+            //Navigator.pushNamed(context, "/ride_dashboard");
+          } else {
+            BlocProvider.of<PassengersSelectionController>(context)
+                .add(SetRideData(ride: state.ride));
+            Navigator.popAndPushNamed(context, "/passengers_selection");
+          }
+        } else if (state is DriverAlreadyHaveARide) {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return RideAlreadyExistsDialog(
+                    title:
+                        "Só é possível ter uma carona por vez, e você já possiu uma ativa.",
+                    oldRide: state.oldRide,
+                    chooseOldRide: () => _rideCreationController
+                        .add(KeepOldRide(oldRide: state.oldRide)),
+                    chooseNewRide: () => _rideCreationController.add(
+                        DeleteOldRideAndCreateNew(oldRide: state.oldRide)));
+              });
         }
       },
       child: BaseScreen(
@@ -59,10 +81,10 @@ class RideCreationScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     textFormField<SetOriginData, OriginLocationSetted>(
-                        "Origem", rideCreationController, context),
+                        "Origem", _rideCreationController, context),
                     const SizedBox(height: 10),
                     textFormField<SetDestinationData, DestLocationSetted>(
-                        "Destino", rideCreationController, context),
+                        "Destino", _rideCreationController, context),
                     const SizedBox(height: 20),
                     ExpandableMapWidget(),
                     const SizedBox(height: 20),
@@ -82,7 +104,7 @@ class RideCreationScreen extends StatelessWidget {
                                   selectedTime.day,
                                   time.hour,
                                   time.minute);
-                              rideCreationController
+                              _rideCreationController
                                   .add(SetDepartureTime(selectedTime));
                             }
                           },
@@ -155,7 +177,7 @@ class RideCreationScreen extends StatelessWidget {
                     "Criar carona",
                     Colors.black,
                     MediaQuery.of(context).size.width * 0.8,
-                    () => rideCreationController.add(RideCreationFinished(
+                    () => _rideCreationController.add(RideCreationFinished(
                         BlocProvider.of<LoginController>(context).user)),
                     yellow),
               ),
@@ -169,7 +191,7 @@ class RideCreationScreen extends StatelessWidget {
                     white,
                     MediaQuery.of(context).size.width * 0.5,
                     () => {
-                          rideCreationController.add(RideCanceled()),
+                          _rideCreationController.add(RideCanceled()),
                           Navigator.pop(context)
                         },
                     Colors.black),

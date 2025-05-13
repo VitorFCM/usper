@@ -4,6 +4,7 @@ import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
+import 'package:usper/services/data_repository/repository_exceptions.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 import 'package:usper/utils/displayable_address.dart';
 
@@ -20,6 +21,8 @@ class RideCreationController
     on<VehicleRideChosed>(_setRideVehicle);
     on<RideCreationFinished>(_createRide);
     on<RideCanceled>(_clearData);
+    on<DeleteOldRideAndCreateNew>(_deleteOldRideAndCreateNew);
+    on<KeepOldRide>(((event, emit) => emit(RideCreated(ride: event.oldRide))));
   }
 
   RepositoryInterface repositoryService;
@@ -28,6 +31,8 @@ class RideCreationController
   PickedData? originData;
   PickedData? destData;
   Vehicle? vehicle;
+
+  RideData? finalRide;
 
   void _setDepartureTime(
       SetDepartureTime event, Emitter<RideCreationState> emit) {
@@ -81,9 +86,30 @@ class RideCreationController
       emit(const RideCreationStateError(
           "Ocorreu um erro com o seu login, por favor feche o aplicativo e tente novamente"));
     } else {
-      RideData ride = _createRideData(event.driver!);
-      await repositoryService.insertRide(ride);
-      emit(RideCreated(ride: ride));
+      finalRide = _createRideData(event.driver!);
+      try {
+        await repositoryService.insertRide(finalRide!);
+        emit(RideCreated(ride: finalRide!));
+      } on DriverAlreadyHaveARideException {
+        RideData? oldRide =
+            await repositoryService.getRide(finalRide!.driver.email);
+        if (oldRide != null) {
+          emit(DriverAlreadyHaveARide(oldRide: oldRide));
+        } else {
+          add(DeleteOldRideAndCreateNew(oldRide: finalRide!));
+        }
+      }
+    }
+  }
+
+  void _deleteOldRideAndCreateNew(
+      DeleteOldRideAndCreateNew event, Emitter<RideCreationState> emit) async {
+    try {
+      await repositoryService.deleteRide(event.oldRide.driver.email);
+      await repositoryService.insertRide(finalRide!);
+      emit(RideCreated(ride: finalRide!));
+    } catch (e) {
+      emit(RideCreationStateError(e.toString()));
     }
   }
 

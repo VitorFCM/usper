@@ -4,3 +4,5 @@ class PassengerAlreadyRequestedARideException implements Exception {
 }
 
 class RideWasAlreadyDeleted implements Exception {}
+
+class DriverAlreadyHaveARideException implements Exception {}

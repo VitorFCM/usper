@@ -27,7 +27,6 @@ class SetLocationAlertDialog extends StatelessWidget {
               selectLocationButtonStyle: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(yellow),
               ),
-              selectedLocationButtonTextstyle: const TextStyle(fontSize: 18),
               selectLocationButtonText: 'Utilizar localização',
               selectLocationButtonLeadingIcon: const Icon(Icons.check),
               initZoom: 18,
