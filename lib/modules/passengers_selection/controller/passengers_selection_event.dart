@@ -30,3 +30,5 @@ class RequestRefused extends PassengersSelectionEvent {
 }
 
 class CancelRide extends PassengersSelectionEvent {}
+
+class StartRide extends PassengersSelectionEvent {}

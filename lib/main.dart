@@ -12,6 +12,8 @@ import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creati
 import 'package:usper/modules/passengers_selection/screen/passengers_sel_screen.dart';
 import 'package:usper/modules/ride_creation/screen/ride_creation_screen.dart';
 import 'package:usper/modules/ride_creation/vehicle_configuration_controller/vehicle_configuration_controller.dart';
+import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
+import 'package:usper/modules/ride_dashboard/screen/ride_dashboard_screen.dart';
 import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/modules/waiting_room/screen/waiting_room_screen.dart';
 import 'package:usper/services/authentication/google_auth_supabase_service.dart';
@@ -60,8 +62,13 @@ class Application extends StatelessWidget {
                   user: BlocProvider.of<LoginController>(context).user!,
                   homeController: BlocProvider.of<HomeController>(context))),
           BlocProvider(
+              create: (context) => RideDashboardController(
+                  repositoryService: repositoryService)),
+          BlocProvider(
               create: (context) => PassengersSelectionController(
-                  repositoryService: repositoryService))
+                  repositoryService: repositoryService,
+                  rideDashboardController:
+                      BlocProvider.of<RideDashboardController>(context))),
         ],
         child: MaterialApp(
           title: 'Usper',
@@ -79,7 +86,8 @@ class Application extends StatelessWidget {
                 create: (_) => RideCreationController(),
                 child: RideCreationScreen()),*/
             '/waiting_room': (context) => WaitingRoomScreen(),
-            '/passengers_selection': (context) => PassengersSelScreen()
+            '/passengers_selection': (context) => PassengersSelScreen(),
+            '/ride_dashboard': (context) => RideDashboardScreen(),
           },
         ));
   }

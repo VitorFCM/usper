@@ -33,3 +33,7 @@ class PassengersRetrievedState extends PassengersSelectionState {
   Map<String, UsperUser> approved;
   Map<String, UsperUser> requests;
 }
+
+class Loading extends PassengersSelectionState {}
+
+class RideStartedState extends PassengersSelectionState {}

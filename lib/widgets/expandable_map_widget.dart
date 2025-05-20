@@ -6,9 +6,18 @@ import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
 
 class ExpandableMapWidget extends StatelessWidget {
-  ExpandableMapWidget();
+  final Map<String, Marker?> markersMap;
 
-  Map<String, Marker?> markersMap = {"origin": null, "destination": null};
+  ExpandableMapWidget({
+    Key? key,
+    Map<String, LatLng>? locations,
+  })  : markersMap = locations == null
+            ? {"origin": null, "destination": null}
+            : {
+                "origin": _buildMarker(locations["origin"]!),
+                "destination": _buildMarker(locations["destination"]!)
+              },
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +96,7 @@ class ExpandableMapWidget extends StatelessWidget {
     );
   }
 
-  Marker _buildMarker(LatLng point) {
+  static Marker _buildMarker(LatLng point) {
     return Marker(
       point: point,
       child: Container(

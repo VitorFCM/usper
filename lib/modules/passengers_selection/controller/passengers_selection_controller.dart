@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:usper/constants/ride_requests_event_type.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
+import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 
 part 'passengers_selection_event.dart';
@@ -12,7 +13,8 @@ class PassengersSelectionController
   Map<String, UsperUser> approved = {};
   Map<String, UsperUser> requests = {};
 
-  PassengersSelectionController({required this.repositoryService})
+  PassengersSelectionController(
+      {required this.repositoryService, required this.rideDashboardController})
       : super(InitialPassengersSelectionState()) {
     on<SetRideData>(_setRideData);
     on<RequestAccepted>(_acceptPassenger);
@@ -22,9 +24,11 @@ class PassengersSelectionController
         (event, emit) => emit(RequestCreatedState(passenger: event.passenger)));
     on<RequestRefused>(_refusePassenger);
     on<CancelRide>(_cancelRide);
+    on<StartRide>(_startRide);
   }
 
   RepositoryInterface repositoryService;
+  RideDashboardController rideDashboardController;
   late RideData ride;
 
   void _setRideData(
@@ -93,6 +97,13 @@ class PassengersSelectionController
           break;
       }
     });
+  }
+
+  void _startRide(StartRide event, Emitter<PassengersSelectionState> emit) {
+    emit(Loading());
+    _stopListeningRideRequests();
+    rideDashboardController.add(RideStarted(ride: ride));
+    emit(RideStartedState());
   }
 
   void _stopListeningRideRequests() {
