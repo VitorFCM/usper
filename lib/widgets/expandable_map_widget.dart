@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:usper/constants/colors_constants.dart';
-import 'package:usper/modules/ride_creation/ride_creation_controller/ride_creation_controller.dart';
+import 'package:usper/constants/map_bounds.dart';
 
 class ExpandableMapWidget extends StatelessWidget {
   final Map<String, Marker?> markersMap;
+  final List<LatLng> routePoints;
 
-  ExpandableMapWidget({
-    Key? key,
-    Map<String, LatLng>? locations,
-  })  : markersMap = locations == null
-            ? {"origin": null, "destination": null}
-            : {
-                "origin": _buildMarker(locations["origin"]!),
-                "destination": _buildMarker(locations["destination"]!)
-              },
+  ExpandableMapWidget(
+      {Key? key,
+      LatLng? origin,
+      LatLng? destination,
+      this.routePoints = const []})
+      : markersMap = {
+          "origin": origin != null ? _buildMarker(origin) : null,
+          "destination": destination != null ? _buildMarker(destination) : null,
+        },
         super(key: key);
 
   @override
@@ -25,23 +25,17 @@ class ExpandableMapWidget extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: Container(
         width: MediaQuery.of(context).size.width,
-        height: 200, // Ajusta a altura com base no estado
+        height: 200,
         child: flutterMap(
             context,
             () => showDialog(
                 context: context,
                 builder: (context) => _dialog(flutterMap(
-                    context,
-                    () => Navigator.pop(context),
-                    Icons.fullscreen_exit,
-                    MarkerLayer(
-                      markers: markersMap.values
-                          .where((v) => v != null)
-                          .cast<Marker>()
-                          .toList(),
-                    )))),
-            Icons.fullscreen,
-            _buildBlocBuilder(context)),
+                      context,
+                      () => Navigator.pop(context),
+                      Icons.fullscreen_exit,
+                    ))),
+            Icons.fullscreen),
       ),
     );
   }
@@ -55,30 +49,31 @@ class ExpandableMapWidget extends StatelessWidget {
         ));
   }
 
-  FlutterMap flutterMap(BuildContext context, void Function() onPressed,
-      IconData icon, Widget markers) {
+  FlutterMap flutterMap(
+      BuildContext context, void Function() onPressed, IconData icon) {
     return FlutterMap(
       options: MapOptions(
-        initialCenter:
-            LatLng(-23.550520, -46.633308), // Coordenadas de São Paulo, Brasil
+        initialCenter: LatLng(-23.550520, -46.633308),
         initialZoom: 13.0,
+        cameraConstraint: CameraConstraint.contain(bounds: mapBounds),
+        maxZoom: 16,
+        minZoom: 3,
       ),
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'dev.fleaflet.flutter_map.example',
         ),
-        markers,
+        MarkerLayer(
+          markers:
+              markersMap.values.where((v) => v != null).cast<Marker>().toList(),
+        ),
         PolylineLayer(
           polylines: [
             Polyline(
-              points: [
-                LatLng(37.7749, -122.4194), // San Francisco
-                LatLng(34.0522, -118.2437), // Los Angeles
-                LatLng(36.1699, -115.1398), // Las Vegas
-              ],
+              points: routePoints,
               strokeWidth: 4.0,
-              color: Colors.blue,
+              color: blue,
             ),
           ],
         ),
@@ -99,33 +94,11 @@ class ExpandableMapWidget extends StatelessWidget {
   static Marker _buildMarker(LatLng point) {
     return Marker(
       point: point,
-      child: Container(
-        child: const Icon(
-          Icons.location_on,
-          color: blue,
-          size: 40.0,
-        ),
+      child: Icon(
+        Icons.location_on,
+        color: yellow,
+        size: 40.0,
       ),
-    );
-  }
-
-  BlocBuilder _buildBlocBuilder(BuildContext context) {
-    return BlocBuilder<RideCreationController, RideCreationState>(
-      buildWhen: (previous, current) {
-        return current is LocationSetted;
-      },
-      builder: (context, state) {
-        if (state is OriginLocationSetted) {
-          markersMap["origin"] = _buildMarker(state.location);
-        } else if (state is DestLocationSetted) {
-          markersMap["destination"] = _buildMarker(state.location);
-        }
-
-        return MarkerLayer(
-          markers:
-              markersMap.values.where((v) => v != null).cast<Marker>().toList(),
-        );
-      },
     );
   }
 }

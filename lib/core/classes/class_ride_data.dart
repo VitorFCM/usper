@@ -11,6 +11,7 @@ class RideData {
   Vehicle vehicle;
   UsperUser driver;
   bool? started;
+  List<LatLng>? route;
 
   RideData(
       {required this.originName,
@@ -20,5 +21,6 @@ class RideData {
       required this.departTime,
       required this.vehicle,
       required this.driver,
-      this.started});
+      this.started,
+      this.route});
 }

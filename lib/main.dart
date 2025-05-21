@@ -19,6 +19,8 @@ import 'package:usper/modules/waiting_room/screen/waiting_room_screen.dart';
 import 'package:usper/services/authentication/google_auth_supabase_service.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 import 'package:usper/services/data_repository/supabase_service.dart';
+import 'package:usper/services/map_service/map_interface.dart';
+import 'package:usper/services/map_service/map_service.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -39,6 +41,8 @@ class Application extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final RepositoryInterface repositoryService = SupabaseService();
+    final MapInterface mapService = MapService();
+
     return MultiBlocProvider(
         providers: [
           BlocProvider(
@@ -46,8 +50,9 @@ class Application extends StatelessWidget {
                   googleAuth: GoogleAuthSupabaseService(),
                   repositoryService: repositoryService)),
           BlocProvider(
-              create: (context) =>
-                  RideCreationController(repositoryService: repositoryService)),
+              create: (context) => RideCreationController(
+                  repositoryService: repositoryService,
+                  mapService: mapService)),
           BlocProvider(
               create: (context) => VehicleConfigurationController(
                   rideCreationController:

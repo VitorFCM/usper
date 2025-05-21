@@ -12,25 +12,38 @@ final class RideCreationStateError extends RideCreationState {
   final String errorMessage;
 }
 
-final class DepartureTimeSetted extends RideCreationState {
-  const DepartureTimeSetted(this.departTime);
+final class DepartureTimeSetState extends RideCreationState {
+  const DepartureTimeSetState(this.departTime);
 
   final DateTime departTime;
 }
 
-abstract class LocationSetted extends RideCreationState {
-  LocationSetted(this.address, this.location);
+abstract class LocationSetState extends RideCreationState {
+  LocationSetState(
+    this.address,
+    this.location, {
+    this.route,
+  });
 
   final String address;
   final LatLng location;
+  final List<LatLng>? route;
 }
 
-final class OriginLocationSetted extends LocationSetted {
-  OriginLocationSetted(super.address, super.location);
+final class OriginLocationSetState extends LocationSetState {
+  OriginLocationSetState(
+    super.address,
+    super.location, {
+    super.route,
+  });
 }
 
-final class DestLocationSetted extends LocationSetted {
-  DestLocationSetted(super.address, super.location);
+final class DestLocationSetState extends LocationSetState {
+  DestLocationSetState(
+    super.address,
+    super.location, {
+    super.route,
+  });
 }
 
 final class RideVehicleDefined extends RideCreationState {

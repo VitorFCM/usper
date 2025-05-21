@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/constants/map_bounds.dart';
 
 class SetLocationAlertDialog extends StatelessWidget {
   const SetLocationAlertDialog(
@@ -16,6 +17,8 @@ class SetLocationAlertDialog extends StatelessWidget {
         child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: FlutterLocationPicker(
+              countryFilter: 'br',
+              maxBounds: mapBounds,
               mapLanguage: 'pt',
               searchBarHintText: "Pesquisar localização",
               searchbarBorderRadius: BorderRadius.circular(20),
@@ -23,7 +26,7 @@ class SetLocationAlertDialog extends StatelessWidget {
                   const OutlineInputBorder(borderSide: BorderSide.none),
               searchbarInputFocusBorderp:
                   const OutlineInputBorder(borderSide: BorderSide.none),
-              initPosition: initPosition,
+              initPosition: initPosition ?? LatLong(-23.550520, -46.633308),
               selectLocationButtonStyle: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(yellow),
               ),

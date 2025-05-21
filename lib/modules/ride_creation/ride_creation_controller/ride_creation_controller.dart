@@ -6,6 +6,8 @@ import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
 import 'package:usper/services/data_repository/repository_exceptions.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
+import 'package:usper/services/map_service/map_interface.dart';
+import 'package:usper/services/map_service/map_service.dart';
 import 'package:usper/utils/displayable_address.dart';
 
 part 'ride_creation_event.dart';
@@ -13,7 +15,8 @@ part 'ride_creation_state.dart';
 
 class RideCreationController
     extends Bloc<RideCreationEvent, RideCreationState> {
-  RideCreationController({required this.repositoryService})
+  RideCreationController(
+      {required this.repositoryService, required this.mapService})
       : super(InitialRideCreationState()) {
     on<SetDepartureTime>(_setDepartureTime);
     on<SetOriginData>(_setOriginData);
@@ -26,10 +29,12 @@ class RideCreationController
   }
 
   RepositoryInterface repositoryService;
+  MapInterface mapService;
 
   DateTime? departTime;
   PickedData? originData;
   PickedData? destData;
+  List<LatLng>? route;
   Vehicle? vehicle;
 
   RideData? finalRide;
@@ -37,10 +42,11 @@ class RideCreationController
   void _setDepartureTime(
       SetDepartureTime event, Emitter<RideCreationState> emit) {
     departTime = event.departTime;
-    emit(DepartureTimeSetted(departTime!));
+    emit(DepartureTimeSetState(departTime!));
   }
 
-  void _setOriginData(SetOriginData event, Emitter<RideCreationState> emit) {
+  void _setOriginData(
+      SetOriginData event, Emitter<RideCreationState> emit) async {
     print(event.locationData.latLong.latitude);
     print(event.locationData.latLong.longitude);
     print(event.locationData.addressData);
@@ -48,15 +54,28 @@ class RideCreationController
 
     originData = event.locationData;
 
-    emit(OriginLocationSetted(displayableAddress(originData!.addressData),
-        _latLongToLatLng(originData!.latLong)));
+    if (destData != null) {
+      route = await mapService.getRoute(_latLongToLatLng(originData!.latLong),
+          _latLongToLatLng(destData!.latLong));
+    }
+
+    emit(OriginLocationSetState(displayableAddress(originData!.addressData),
+        _latLongToLatLng(originData!.latLong),
+        route: route));
   }
 
   void _setDestinationData(
-      SetDestinationData event, Emitter<RideCreationState> emit) {
+      SetDestinationData event, Emitter<RideCreationState> emit) async {
     destData = event.locationData;
-    emit(DestLocationSetted(displayableAddress(destData!.addressData),
-        _latLongToLatLng(destData!.latLong)));
+
+    if (originData != null) {
+      route = await mapService.getRoute(_latLongToLatLng(originData!.latLong),
+          _latLongToLatLng(destData!.latLong));
+    }
+
+    emit(DestLocationSetState(displayableAddress(destData!.addressData),
+        _latLongToLatLng(destData!.latLong),
+        route: route));
   }
 
   LatLng _latLongToLatLng(LatLong location) {
@@ -123,7 +142,8 @@ class RideCreationController
             LatLng(destData!.latLong.latitude, destData!.latLong.longitude),
         departTime: departTime!,
         vehicle: vehicle!,
-        driver: driver);
+        driver: driver,
+        route: route);
   }
 
   void _clearData(RideCanceled event, Emitter<RideCreationState> emit) {
@@ -131,6 +151,7 @@ class RideCreationController
     originData = null;
     destData = null;
     vehicle = null;
+    route = null;
     emit(RideDataCleared());
   }
 }

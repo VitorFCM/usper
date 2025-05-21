@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
@@ -80,13 +81,13 @@ class RideCreationScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    textFormField<SetOriginData, OriginLocationSetted>(
+                    textFormField<SetOriginData, OriginLocationSetState>(
                         "Origem", _rideCreationController, context),
                     const SizedBox(height: 10),
-                    textFormField<SetDestinationData, DestLocationSetted>(
+                    textFormField<SetDestinationData, DestLocationSetState>(
                         "Destino", _rideCreationController, context),
                     const SizedBox(height: 20),
-                    ExpandableMapWidget(),
+                    mapBuilder(context),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,10 +115,10 @@ class RideCreationScreen extends StatelessWidget {
                               inputWidget: BlocBuilder<RideCreationController,
                                   RideCreationState>(
                                 buildWhen: (previous, current) {
-                                  return current is DepartureTimeSetted;
+                                  return current is DepartureTimeSetState;
                                 },
                                 builder: (context, state) {
-                                  if (state is DepartureTimeSetted) {
+                                  if (state is DepartureTimeSetState) {
                                     return Text(
                                         datetimeToString(state.departTime));
                                   } else {
@@ -187,14 +188,11 @@ class RideCreationScreen extends StatelessWidget {
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: button(
-                    "Cancelar",
-                    white,
-                    MediaQuery.of(context).size.width * 0.5,
-                    () => {
-                          _rideCreationController.add(RideCanceled()),
-                          Navigator.pop(context)
-                        },
-                    Colors.black),
+                    "Cancelar", white, MediaQuery.of(context).size.width * 0.5,
+                    () {
+                  _rideCreationController.add(RideCanceled());
+                  Navigator.pop(context);
+                }, Colors.black),
               ),
             ),
           ],
@@ -219,7 +217,7 @@ class RideCreationScreen extends StatelessWidget {
     );
   }
 
-  Widget textFormField<T extends SetLocationData, U extends LocationSetted>(
+  Widget textFormField<T extends SetLocationData, U extends LocationSetState>(
       String hintText,
       RideCreationController controller,
       BuildContext context) {
@@ -227,14 +225,10 @@ class RideCreationScreen extends StatelessWidget {
 
     return GestureDetector(
         onTap: () async {
-          if (U == OriginLocationSetted) {
-            initPosition = controller.originData != null
-                ? controller.originData!.latLong
-                : null;
-          } else if (U == DestLocationSetted) {
-            initPosition = controller.destData != null
-                ? controller.destData!.latLong
-                : null;
+          if (U == OriginLocationSetState) {
+            initPosition = controller.originData?.latLong;
+          } else if (U == DestLocationSetState) {
+            initPosition = controller.destData?.latLong;
           }
           showDialog(
               context: context,
@@ -289,6 +283,33 @@ class RideCreationScreen extends StatelessWidget {
               child: child!,
             ),
           ),
+        );
+      },
+    );
+  }
+
+  BlocBuilder mapBuilder(BuildContext context) {
+    LatLng? origin;
+    LatLng? destination;
+    List<LatLng> routePoints = [];
+
+    return BlocBuilder<RideCreationController, RideCreationState>(
+      buildWhen: (previous, current) {
+        return current is LocationSetState;
+      },
+      builder: (context, state) {
+        if (state is OriginLocationSetState) {
+          origin = state.location;
+          routePoints = state.route ?? [];
+        } else if (state is DestLocationSetState) {
+          destination = state.location;
+          routePoints = state.route ?? [];
+        }
+
+        return ExpandableMapWidget(
+          origin: origin,
+          destination: destination,
+          routePoints: routePoints,
         );
       },
     );

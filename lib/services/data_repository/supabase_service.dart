@@ -75,6 +75,13 @@ class SupabaseService implements RepositoryInterface {
 
   @override
   Future<void> insertRide(RideData ride) async {
+    List<Map<String, double>> routeList = (ride.route ?? [])
+        .map((latLng) => {
+              "latitude": latLng.latitude,
+              "longitude": latLng.longitude,
+            })
+        .toList();
+
     try {
       await insertData(DatabaseTables.rides, {
         "driver_email": ride.driver.email,
@@ -85,7 +92,8 @@ class SupabaseService implements RepositoryInterface {
         "origin_longitude": ride.originCoord.longitude,
         "dest_latitude": ride.destCoord.latitude,
         "dest_longitude": ride.destCoord.longitude,
-        "depart_time": ride.departTime.toIso8601String()
+        "depart_time": ride.departTime.toIso8601String(),
+        "route": routeList,
       });
     } on PostgrestException catch (e) {
       if (e.code != null && "23505".compareTo(e.code!) == 0) {
@@ -162,17 +170,25 @@ class SupabaseService implements RepositoryInterface {
 
     UsperUser driver = await _fetchUser(record["driver_email"]);
 
+    List<LatLng>? route;
+    if (record["route"] != null) {
+      route = (record["route"] as List<dynamic>).map<LatLng>((point) {
+        final map = point as Map<String, dynamic>;
+        return LatLng(map["latitude"], map["longitude"]);
+      }).toList();
+    }
+
     return RideData(
-      driver: driver,
-      originName: record["origin_name"],
-      destName: record["destination_name"],
-      originCoord:
-          LatLng(record["origin_latitude"], record["origin_longitude"]),
-      destCoord: LatLng(record["dest_latitude"], record["dest_longitude"]),
-      departTime: DateTime.parse(record["depart_time"]),
-      vehicle: vehiclesList[0],
-      started: record["started"],
-    );
+        driver: driver,
+        originName: record["origin_name"],
+        destName: record["destination_name"],
+        originCoord:
+            LatLng(record["origin_latitude"], record["origin_longitude"]),
+        destCoord: LatLng(record["dest_latitude"], record["dest_longitude"]),
+        departTime: DateTime.parse(record["depart_time"]),
+        vehicle: vehiclesList[0],
+        started: record["started"],
+        route: route);
   }
 
   Future<void> _init() async {

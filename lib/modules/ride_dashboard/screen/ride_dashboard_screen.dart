@@ -46,10 +46,9 @@ class RideDashboardScreen extends StatelessWidget {
             RideInfoCard(rideData: controller.ride),
             const SizedBox(height: 20),
             ExpandableMapWidget(
-              locations: {
-                "origin": controller.ride.originCoord,
-                "destination": controller.ride.destCoord
-              },
+              origin: controller.ride.originCoord,
+              destination: controller.ride.destCoord,
+              routePoints: controller.ride.route ?? [],
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 15),
