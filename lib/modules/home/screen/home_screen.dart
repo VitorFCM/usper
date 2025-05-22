@@ -11,6 +11,7 @@ import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
 import 'package:usper/widgets/page_title.dart';
 import 'package:usper/widgets/ride_already_exists_dialog.dart';
+import 'package:usper/widgets/set_location_alert_dialog.dart';
 import 'package:usper/widgets/user_image.dart';
 import 'package:usper/widgets/usp_course_selector.dart';
 
@@ -20,6 +21,7 @@ class HomeScreen extends StatelessWidget {
   Map<String, RideData> rides = {};
   late UsperUser u;
   bool _dialogOpened = false;
+  late HomeController _homeController;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +55,7 @@ class HomeScreen extends StatelessWidget {
       titleOcupation -= screenOcupation - MediaQuery.of(context).size.width;
     }
 
-    HomeController controller = BlocProvider.of<HomeController>(context);
+    _homeController = BlocProvider.of<HomeController>(context);
 
     return BlocListener<HomeController, HomeScreenState>(
         listener: (context, state) {
@@ -67,8 +69,8 @@ class HomeScreen extends StatelessWidget {
                         "Parece que você já possui a seguinte carona em andamento",
                     oldRide: state.ride,
                     chooseOldRide: () =>
-                        controller.add(KeepOldRide(oldRide: state.ride)),
-                    chooseNewRide: () => controller.add(
+                        _homeController.add(KeepOldRide(oldRide: state.ride)),
+                    chooseNewRide: () => _homeController.add(
                         DeleteOldRideAndCreateNew(
                             oldRideId: state.ride.driver.email))));
           } else if (state is HomeStateError) {
@@ -78,8 +80,7 @@ class HomeScreen extends StatelessWidget {
                     ErrorAlertDialog(errorMessage: state.errorMessage));
           } else if (state is KeepOldRideState) {
             if (state.oldRide.started ?? false) {
-              print("To do");
-              //Navigator.pushNamed(context, "/ride_dashboard");
+              Navigator.pushNamed(context, "/ride_dashboard");
             } else {
               BlocProvider.of<PassengersSelectionController>(context)
                   .add(SetRideData(ride: state.oldRide));
@@ -102,7 +103,7 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
-            textFormField(),
+            textFormField(context),
             const SizedBox(height: 50),
             rideCreationButton(context),
             const SizedBox(height: 50),
@@ -117,22 +118,36 @@ class HomeScreen extends StatelessWidget {
         )));
   }
 
-  TextFormField textFormField() {
-    return TextFormField(
-      textAlignVertical: const TextAlignVertical(y: 0.0),
-      cursorColor: black,
-      decoration: InputDecoration(
-        hintText: 'Digite um local',
-        filled: true,
-        fillColor: white,
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
-        border: OutlineInputBorder(
-          borderSide: const BorderSide(style: BorderStyle.none, width: 0.0),
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
+  Widget textFormField(BuildContext context) {
+    return GestureDetector(
+        onTap: () async {
+          showDialog(
+              context: context,
+              builder: (context) => SetLocationAlertDialog(
+                  onPickedFunction: (pickedData) {
+                    _homeController.add(SetDestination(pickedData: pickedData));
+                    Navigator.of(context).pop();
+                  },
+                  initPosition: _homeController.destinationData?.latLong));
+        },
+        child: Container(
+          decoration: BoxDecoration(
+              color: white, borderRadius: BorderRadius.circular(12)),
+          width: MediaQuery.of(context).size.width,
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+          child: BlocBuilder<HomeController, HomeScreenState>(
+            buildWhen: (previous, current) {
+              return current is DestinationSetState;
+            },
+            builder: (context, state) {
+              if (state is DestinationSetState) {
+                return Text(state.address);
+              } else {
+                return Text('Digite um local');
+              }
+            },
+          ),
+        ));
   }
 
   TextButton rideCreationButton(BuildContext context) {
@@ -154,7 +169,8 @@ class HomeScreen extends StatelessWidget {
       buildWhen: (previous, current) {
         return current is InitialRidesLoaded ||
             current is InsertRideRecordState ||
-            current is RemoveRideRecordState;
+            current is RemoveRideRecordState ||
+            current is DestinationSetState;
       },
       builder: (context, state) {
         if (state is InitialRidesLoaded) {
@@ -163,6 +179,8 @@ class HomeScreen extends StatelessWidget {
           rides[state.rideData.driver.email] = state.rideData;
         } else if (state is RemoveRideRecordState) {
           rides.remove(state.rideId);
+        } else if (state is DestinationSetState) {
+          rides = state.ordenatedRides;
         }
 
         return ListView.builder(

@@ -37,3 +37,9 @@ class KeepOldRideState extends HomeScreenState {
   KeepOldRideState({required this.oldRide});
   RideData oldRide;
 }
+
+class DestinationSetState extends HomeScreenState {
+  DestinationSetState({required this.address, required this.ordenatedRides});
+  String address;
+  Map<String, RideData> ordenatedRides;
+}

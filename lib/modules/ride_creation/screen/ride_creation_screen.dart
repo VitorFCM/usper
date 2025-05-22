@@ -39,8 +39,7 @@ class RideCreationScreen extends StatelessWidget {
               });
         } else if (state is RideCreated) {
           if (state.ride.started ?? false) {
-            print("To do");
-            //Navigator.pushNamed(context, "/ride_dashboard");
+            Navigator.pushNamed(context, "/ride_dashboard");
           } else {
             BlocProvider.of<PassengersSelectionController>(context)
                 .add(SetRideData(ride: state.ride));

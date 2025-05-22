@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
-import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/changing_text_widget.dart';

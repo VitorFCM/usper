@@ -30,3 +30,8 @@ final class KeepOldRide extends HomeScreenEvent {
   KeepOldRide({required this.oldRide});
   RideData oldRide;
 }
+
+final class SetDestination extends HomeScreenEvent {
+  SetDestination({required this.pickedData});
+  PickedData pickedData;
+}
