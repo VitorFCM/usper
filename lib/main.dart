@@ -59,8 +59,9 @@ class Application extends StatelessWidget {
                       BlocProvider.of<RideCreationController>(context),
                   repositoryService: repositoryService)),
           BlocProvider(
-              create: (context) =>
-                  HomeController(repositoryService: repositoryService)),
+              create: (context) => HomeController(
+                  repositoryService: repositoryService,
+                  user: BlocProvider.of<LoginController>(context).user!)),
           BlocProvider(
               create: (context) => RideDashboardController(
                   repositoryService: repositoryService)),

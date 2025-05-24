@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:usper/constants/ride_data_event_type.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
+import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 import 'package:usper/utils/displayable_address.dart';
 
@@ -15,8 +16,9 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
   RepositoryInterface repositoryService;
   PickedData? destinationData;
   Map<String, RideData> _rides = {};
+  UsperUser user;
 
-  HomeController({required this.repositoryService})
+  HomeController({required this.repositoryService, required this.user})
       : super(InitialHomeScreenState()) {
     on<RideCreated>(_provideNewRide);
     on<RemoveRide>(_updateRidesCollection);
@@ -31,7 +33,9 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
     repositoryService.avaiableRidesStream().listen((rideDataEvent) {
       switch (rideDataEvent.key) {
         case RideDataEventType.created:
-          add(RideCreated(rideData: rideDataEvent.value));
+          if (rideDataEvent.value.driver.email != user.email) {
+            add(RideCreated(rideData: rideDataEvent.value));
+          }
         case RideDataEventType.started:
         case RideDataEventType.deleted:
           add(RemoveRide(rideId: rideDataEvent.value.driver.email));
@@ -54,6 +58,7 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
   void _fetchAllAvaiableRides(
       LoadInitialRides event, Emitter<HomeScreenState> emit) async {
     _rides = await repositoryService.fetchAllAvaiableRides();
+    _rides.remove(user.email);
     emit(InitialRidesLoaded(rides: _rides));
   }
 

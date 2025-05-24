@@ -27,7 +27,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     context.select((LoginController controller) {
-      user = controller.user!;
       if (controller.isNewUser! && !_dialogOpened) {
         _dialogOpened = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -57,6 +56,8 @@ class HomeScreen extends StatelessWidget {
     }
 
     _homeController = BlocProvider.of<HomeController>(context);
+
+    user = _homeController.user;
 
     return BlocListener<HomeController, HomeScreenState>(
         listener: (context, state) {
