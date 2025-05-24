@@ -10,10 +10,12 @@ import 'package:usper/widgets/page_title.dart';
 import 'package:usper/widgets/ride_info_card.dart';
 
 class RideDashboardScreen extends StatelessWidget {
+  late RideDashboardController _rideDashboardController;
+
   @override
   Widget build(BuildContext context) {
     double titleOcupation = MediaQuery.of(context).size.width * 0.68;
-    RideDashboardController controller =
+    _rideDashboardController =
         BlocProvider.of<RideDashboardController>(context);
 
     return BaseScreen(
@@ -42,31 +44,40 @@ class RideDashboardScreen extends StatelessWidget {
               child: PageTitle(title: "Carona iniciada"),
             ),
             const SizedBox(height: 20),
-            RideInfoCard(rideData: controller.ride),
+            RideInfoCard(rideData: _rideDashboardController.ride),
             const SizedBox(height: 20),
             ExpandableMapWidget(
-              origin: controller.ride.originCoord,
-              destination: controller.ride.destCoord,
-              routePoints: controller.ride.route ?? [],
+              origin: _rideDashboardController.ride.originCoord,
+              destination: _rideDashboardController.ride.destCoord,
+              routePoints: _rideDashboardController.ride.route ?? [],
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 15),
-              child: Align(
-                alignment: Alignment.center,
-                child: button(
-                    "Finalizar",
-                    white,
-                    MediaQuery.of(context).size.width * 0.8,
-                    () => controller.add(FinishRide()),
-                    Colors.black),
-              ),
-            ),
+            buttonSection(context),
           ],
         );
       },
     ));
+  }
 
-    ;
+  Widget buttonSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Align(
+        alignment: Alignment.center,
+        child: _rideDashboardController.isDriver
+            ? button(
+                "Finalizar",
+                white,
+                MediaQuery.of(context).size.width * 0.8,
+                () => _rideDashboardController.add(FinishRide()),
+                Colors.black)
+            : button(
+                "Desistir",
+                white,
+                MediaQuery.of(context).size.width * 0.8,
+                () => _rideDashboardController.add(PassengerGiveUp()),
+                Colors.black),
+      ),
+    );
   }
 
   TextButton button(String title, Color textColor, double minWidth,

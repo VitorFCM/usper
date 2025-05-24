@@ -37,6 +37,8 @@ class WaitingRoomScreen extends StatelessWidget {
               context: context,
               builder: (context) =>
                   ErrorAlertDialog(errorMessage: state.message));
+        } else if (state is RideStartedState) {
+          Navigator.popAndPushNamed(context, '/ride_dashboard');
         }
       },
       child: BaseScreen(

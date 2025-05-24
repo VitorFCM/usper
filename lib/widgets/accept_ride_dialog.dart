@@ -25,6 +25,8 @@ class AcceptRideDialog extends StatelessWidget {
       listener: (context, state) {
         if (state is RideRequestCreated) {
           Navigator.popAndPushNamed(context, "/waiting_room");
+        } else if (state is RideStartedState) {
+          Navigator.popAndPushNamed(context, "/ride_dashboard");
         }
       },
       builder: (context, state) {

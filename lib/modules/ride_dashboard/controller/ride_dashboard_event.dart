@@ -4,9 +4,12 @@ sealed class RideDashboardEvent {
   const RideDashboardEvent();
 }
 
-class RideStarted extends RideDashboardEvent {
-  RideStarted({required this.ride});
+class SetRide extends RideDashboardEvent {
+  SetRide({required this.ride, required this.user});
   RideData ride;
+  UsperUser user;
 }
 
 class FinishRide extends RideDashboardEvent {}
+
+class PassengerGiveUp extends RideDashboardEvent {}

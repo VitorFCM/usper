@@ -4,6 +4,7 @@ import 'package:usper/constants/ride_requests_event_type.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
+import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
 import 'package:usper/services/data_repository/repository_exceptions.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 
@@ -14,7 +15,8 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
   WaitingRoomController(
       {required this.repositoryService,
       required this.user,
-      required this.homeController})
+      required this.homeController,
+      required this.rideDashboardController})
       : super(InitialWaitingRoomState()) {
     on<CreateRideRequest>(_createRideRequest);
     on<NewRequestAccepted>((event, emit) =>
@@ -26,7 +28,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     on<ClearState>((event, emit) => emit(InitialWaitingRoomState()));
     on<DeleteOldRequestAndCreateNew>(_deleteOldRequestAndCreateNew);
     on<KeepOldRequest>(_keepOldRequest);
-    //on<RideStarted>(),
+    on<RideStarted>(_rideStarted);
     on<RideCanceled>(_rideCanceled);
   }
 
@@ -35,6 +37,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
   late RideData ride;
   Map<String, UsperUser> acceptedRideRequests = {};
   HomeController homeController;
+  RideDashboardController rideDashboardController;
 
   void _createRideRequest(
       CreateRideRequest event, Emitter<WaitingRoomState> emit) async {
@@ -79,9 +82,14 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
   void _keepOldRequest(
       KeepOldRequest event, Emitter<WaitingRoomState> emit) async {
     ride = event.oldRide;
-    emit(RideRequestCreated());
-    await _fetchAcceptedRideRequests(emit);
-    _startListeningRideEvents();
+    if (ride.started ?? false) {
+      rideDashboardController.add(SetRide(ride: ride, user: user));
+      emit(RideStartedState());
+    } else {
+      emit(RideRequestCreated());
+      await _fetchAcceptedRideRequests(emit);
+      _startListeningRideEvents();
+    }
   }
 
   Future<void> _fetchAcceptedRideRequests(
@@ -116,6 +124,13 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     homeController.add(RemoveRide(rideId: ride.driver.email));
     emit(ErrorMessage(
         message: "Parece que o motorista desistiu de oferecer a carona"));
+  }
+
+  void _rideStarted(RideStarted event, Emitter<WaitingRoomState> emit) {
+    emit(Loading());
+    _stopListeningRideEvents();
+    rideDashboardController.add(SetRide(ride: ride, user: user));
+    emit(RideStartedState());
   }
 
   void _startListeningRideEvents() {

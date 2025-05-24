@@ -34,3 +34,7 @@ class ErrorMessage extends WaitingRoomState {
   ErrorMessage({required this.message});
   String message;
 }
+
+class RideStartedState extends WaitingRoomState {
+  RideStartedState();
+}

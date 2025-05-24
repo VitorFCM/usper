@@ -6,6 +6,7 @@ import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/modules/passengers_selection/controller/passengers_selection_controller.dart';
+import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
 import 'package:usper/widgets/avl_ride_card.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
@@ -19,14 +20,14 @@ class HomeScreen extends StatelessWidget {
   HomeScreen({Key? key}) : super(key: key);
 
   Map<String, RideData> rides = {};
-  late UsperUser u;
+  late UsperUser user;
   bool _dialogOpened = false;
   late HomeController _homeController;
 
   @override
   Widget build(BuildContext context) {
     context.select((LoginController controller) {
-      u = controller.user!;
+      user = controller.user!;
       if (controller.isNewUser! && !_dialogOpened) {
         _dialogOpened = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -80,6 +81,8 @@ class HomeScreen extends StatelessWidget {
                     ErrorAlertDialog(errorMessage: state.errorMessage));
           } else if (state is KeepOldRideState) {
             if (state.oldRide.started ?? false) {
+              BlocProvider.of<RideDashboardController>(context).add(
+                  SetRide(ride: state.oldRide, user: state.oldRide.driver));
               Navigator.pushNamed(context, "/ride_dashboard");
             } else {
               BlocProvider.of<PassengersSelectionController>(context)
@@ -97,9 +100,10 @@ class HomeScreen extends StatelessWidget {
               children: [
                 ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: titleOcupation),
-                  child: PageTitle(title: "Para onde\nvamos, ${u.firstName}?"),
+                  child:
+                      PageTitle(title: "Para onde\nvamos, ${user.firstName}?"),
                 ),
-                UserImage(user: u, radius: imgRadius)
+                UserImage(user: user, radius: imgRadius)
               ],
             ),
             const SizedBox(height: 20),
@@ -153,7 +157,7 @@ class HomeScreen extends StatelessWidget {
   TextButton rideCreationButton(BuildContext context) {
     return TextButton(
       onPressed: () => BlocProvider.of<HomeController>(context)
-          .add(CreateRide(rideId: u.email)),
+          .add(CreateRide(rideId: user.email)),
       style: TextButton.styleFrom(
           backgroundColor: yellow,
           minimumSize: Size(MediaQuery.of(context).size.width, 50)),
