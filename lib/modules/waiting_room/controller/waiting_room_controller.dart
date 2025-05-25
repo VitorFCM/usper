@@ -46,7 +46,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     try {
       await repositoryService.insertRideRequest(event.ride, user);
       ride = event.ride;
-      emit(RideRequestCreated());
+      emit(RideRequestCreatedState(ride: ride));
       await _fetchAcceptedRideRequests(emit);
       _startListeningRideEvents();
     } on PassengerAlreadyRequestedARideException catch (e) {
@@ -70,7 +70,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
           event.oldRide.driver.email, user.email);
       await repositoryService.insertRideRequest(event.newRide, user);
       ride = event.newRide;
-      emit(RideRequestCreated());
+      emit(RideRequestCreatedState(ride: ride));
       await _fetchAcceptedRideRequests(emit);
       _startListeningRideEvents();
     } on PassengerAlreadyRequestedARideException catch (e) {
@@ -86,7 +86,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       rideDashboardController.add(SetRide(ride: ride, user: user));
       emit(RideStartedState());
     } else {
-      emit(RideRequestCreated());
+      emit(RideRequestCreatedState(ride: ride));
       await _fetchAcceptedRideRequests(emit);
       _startListeningRideEvents();
     }
@@ -109,6 +109,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       CancelRideRequest event, Emitter<WaitingRoomState> emit) async {
     _stopListeningRideEvents();
     await repositoryService.deleteRideRequest(ride.driver.email, user.email);
+    emit(RideCanceledState());
   }
 
   void _refuseRideRequest(

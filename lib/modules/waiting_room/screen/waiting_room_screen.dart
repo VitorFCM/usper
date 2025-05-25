@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
@@ -39,6 +40,10 @@ class WaitingRoomScreen extends StatelessWidget {
                   ErrorAlertDialog(errorMessage: state.message));
         } else if (state is RideStartedState) {
           Navigator.popAndPushNamed(context, '/ride_dashboard');
+        } else if (state is RideCanceledState) {
+          BlocProvider.of<HomeController>(context)
+              .add(DisassociateUserAndRide());
+          Navigator.popUntil(context, ModalRoute.withName('/home'));
         }
       },
       child: BaseScreen(
@@ -67,10 +72,8 @@ class WaitingRoomScreen extends StatelessWidget {
               padding: const EdgeInsets.only(top: 50),
               child: Align(
                 alignment: Alignment.center,
-                child: button("Cancelar", white, buttonWidth, () {
-                  controller.add(CancelRideRequest());
-                  Navigator.popUntil(context, ModalRoute.withName('/home'));
-                }, Colors.black),
+                child: button("Cancelar", white, buttonWidth,
+                    () => controller.add(CancelRideRequest()), Colors.black),
               ),
             )
           ],

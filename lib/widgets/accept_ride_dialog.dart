@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
+import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/utils/datetime_to_string.dart';
 import 'package:usper/widgets/changing_text_widget.dart';
@@ -23,7 +24,9 @@ class AcceptRideDialog extends StatelessWidget {
 
     return BlocConsumer<WaitingRoomController, WaitingRoomState>(
       listener: (context, state) {
-        if (state is RideRequestCreated) {
+        if (state is RideRequestCreatedState) {
+          BlocProvider.of<HomeController>(context)
+              .add(UserAndRideAssociation(ride: state.ride, isARequest: true));
           Navigator.popAndPushNamed(context, "/waiting_room");
         } else if (state is RideStartedState) {
           Navigator.popAndPushNamed(context, "/ride_dashboard");

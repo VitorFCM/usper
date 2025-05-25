@@ -6,7 +6,10 @@ sealed class WaitingRoomState {
 
 class InitialWaitingRoomState extends WaitingRoomState {}
 
-class RideRequestCreated extends WaitingRoomState {}
+class RideRequestCreatedState extends WaitingRoomState {
+  RideRequestCreatedState({required this.ride});
+  RideData ride;
+}
 
 class AllAcceptedRequests extends WaitingRoomState {
   AllAcceptedRequests({required this.acceptedRequests});
@@ -35,6 +38,6 @@ class ErrorMessage extends WaitingRoomState {
   String message;
 }
 
-class RideStartedState extends WaitingRoomState {
-  RideStartedState();
-}
+class RideStartedState extends WaitingRoomState {}
+
+class RideCanceledState extends WaitingRoomState {}

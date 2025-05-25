@@ -43,3 +43,11 @@ class DestinationSetState extends HomeScreenState {
   String address;
   Map<String, RideData> ordenatedRides;
 }
+
+class UserHaveARide extends HomeScreenState {
+  UserHaveARide({required this.ride, required this.isARequest});
+  RideData ride;
+  bool isARequest;
+}
+
+class UserDontHaveARideAnymore extends HomeScreenState {}

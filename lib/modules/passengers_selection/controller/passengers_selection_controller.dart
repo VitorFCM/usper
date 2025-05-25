@@ -102,6 +102,7 @@ class PassengersSelectionController
   void _startRide(StartRide event, Emitter<PassengersSelectionState> emit) {
     emit(Loading());
     _stopListeningRideRequests();
+    repositoryService.startRide(ride.driver.email);
     rideDashboardController.add(SetRide(ride: ride, user: ride.driver));
     emit(RideStartedState());
   }

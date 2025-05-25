@@ -17,6 +17,7 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
   PickedData? destinationData;
   Map<String, RideData> _rides = {};
   UsperUser user;
+  RideData? rideRequested;
 
   HomeController({required this.repositoryService, required this.user})
       : super(InitialHomeScreenState()) {
@@ -29,20 +30,17 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
       (event, emit) => emit(KeepOldRideState(oldRide: event.oldRide)),
     );
     on<SetDestination>(_setDestination);
+    on<UserAndRideAssociation>((event, emit) =>
+        emit(UserHaveARide(ride: event.ride, isARequest: event.isARequest)));
+    on<DisassociateUserAndRide>(_disassociateUserAndRide);
+    on<CheckIfThereIsARideRequest>(_checkIfThereIsARideRequest);
+    on<GiveUpOnRideCreated>(_deleteRide);
+    on<GiveUpOnRideRequest>(_deleteRideRequest);
 
-    repositoryService.avaiableRidesStream().listen((rideDataEvent) {
-      switch (rideDataEvent.key) {
-        case RideDataEventType.created:
-          if (rideDataEvent.value.driver.email != user.email) {
-            add(RideCreated(rideData: rideDataEvent.value));
-          }
-        case RideDataEventType.started:
-        case RideDataEventType.deleted:
-          add(RemoveRide(rideId: rideDataEvent.value.driver.email));
-      }
-    });
+    _startListeningToRidesAvaiables();
 
     add(LoadInitialRides());
+    add(CheckIfThereIsARideRequest());
   }
 
   void _provideNewRide(RideCreated event, Emitter<HomeScreenState> emit) {
@@ -58,14 +56,19 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
   void _fetchAllAvaiableRides(
       LoadInitialRides event, Emitter<HomeScreenState> emit) async {
     _rides = await repositoryService.fetchAllAvaiableRides();
-    _rides.remove(user.email);
+    RideData? ride = _rides.remove(user.email);
     emit(InitialRidesLoaded(rides: _rides));
+
+    ride ??= await repositoryService.getRide(user.email);
+
+    if (ride != null) {
+      add(UserAndRideAssociation(ride: ride, isARequest: false));
+    }
   }
 
   void _checkIfThereIsARide(
       CreateRide event, Emitter<HomeScreenState> emit) async {
     RideData? ride = await repositoryService.getRide(event.rideId);
-
     if (ride != null) {
       emit(UserAlreadyCreatedARide(ride: ride));
     } else {
@@ -88,6 +91,64 @@ class HomeController extends Bloc<HomeScreenEvent, HomeScreenState> {
     emit(DestinationSetState(
         address: displayableAddress(destinationData!.addressData),
         ordenatedRides: _sortLocationsByDistance(destinationData!.latLong)));
+  }
+
+  void _disassociateUserAndRide(
+      DisassociateUserAndRide event, Emitter<HomeScreenState> emit) {
+    emit(UserDontHaveARideAnymore());
+  }
+
+  void _checkIfThereIsARideRequest(
+      CheckIfThereIsARideRequest event, Emitter<HomeScreenState> emit) async {
+    String? rideId =
+        await repositoryService.getNonRefusedRideRequest(user.email);
+
+    if (rideId != null) {
+      rideRequested = await repositoryService.getRide(rideId);
+      if (rideRequested != null) {
+        add(UserAndRideAssociation(ride: rideRequested!, isARequest: true));
+      }
+    }
+  }
+
+  void _deleteRide(
+      GiveUpOnRideCreated event, Emitter<HomeScreenState> emit) async {
+    await repositoryService.deleteRide(user.email);
+  }
+
+  void _deleteRideRequest(
+      GiveUpOnRideRequest event, Emitter<HomeScreenState> emit) async {
+    await repositoryService.deleteRideRequest(event.rideId, user.email);
+    emit(UserDontHaveARideAnymore());
+  }
+
+  void _startListeningToRidesAvaiables() {
+    repositoryService.avaiableRidesStream().listen((rideDataEvent) {
+      switch (rideDataEvent.key) {
+        case RideDataEventType.created:
+          if (rideDataEvent.value.driver.email == user.email) {
+            add(UserAndRideAssociation(
+                ride: rideDataEvent.value, isARequest: false));
+          } else {
+            add(RideCreated(rideData: rideDataEvent.value));
+          }
+        case RideDataEventType.started:
+          if (rideDataEvent.value.driver.email == user.email) {
+            add(UserAndRideAssociation(
+                ride: rideDataEvent.value, isARequest: false));
+          } else if (rideDataEvent.value.driver.email ==
+              rideRequested?.driver.email) {
+            add(UserAndRideAssociation(
+                ride: rideDataEvent.value, isARequest: true));
+          }
+          add(RemoveRide(rideId: rideDataEvent.value.driver.email));
+        case RideDataEventType.deleted:
+          add(RemoveRide(rideId: rideDataEvent.value as String));
+          if (rideDataEvent.value as String == user.email) {
+            add(DisassociateUserAndRide());
+          }
+      }
+    });
   }
 
   Map<String, RideData> _sortLocationsByDistance(LatLong destination) {

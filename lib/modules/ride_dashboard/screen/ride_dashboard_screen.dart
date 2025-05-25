@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/changing_text_widget.dart';
@@ -22,6 +23,8 @@ class RideDashboardScreen extends StatelessWidget {
         child: BlocConsumer<RideDashboardController, RideDashboardState>(
       listener: (context, state) {
         if (state is RideFinishedState) {
+          BlocProvider.of<HomeController>(context)
+              .add(DisassociateUserAndRide());
           Navigator.popUntil(context, ModalRoute.withName('/home'));
         }
       },

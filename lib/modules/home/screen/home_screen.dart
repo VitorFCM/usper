@@ -9,6 +9,7 @@ import 'package:usper/modules/passengers_selection/controller/passengers_selecti
 import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
 import 'package:usper/widgets/avl_ride_card.dart';
 import 'package:usper/widgets/base_screen.dart';
+import 'package:usper/widgets/blinking_circle_image.dart';
 import 'package:usper/widgets/error_alert_dialog.dart';
 import 'package:usper/widgets/page_title.dart';
 import 'package:usper/widgets/ride_already_exists_dialog.dart';
@@ -23,6 +24,8 @@ class HomeScreen extends StatelessWidget {
   late UsperUser user;
   bool _dialogOpened = false;
   late HomeController _homeController;
+  final double imgRadius = 35;
+  final double lateralPadding = 15;
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +48,6 @@ class HomeScreen extends StatelessWidget {
       }
     });
 
-    const double imgRadius = 35;
-    const double lateralPadding = 15;
     double titleOcupation = MediaQuery.of(context).size.width * 0.68;
 
     double screenOcupation = 2 * (imgRadius + lateralPadding) + titleOcupation;
@@ -104,7 +105,7 @@ class HomeScreen extends StatelessWidget {
                   child:
                       PageTitle(title: "Para onde\nvamos, ${user.firstName}?"),
                 ),
-                UserImage(user: user, radius: imgRadius)
+                userImageSection(),
               ],
             ),
             const SizedBox(height: 20),
@@ -199,6 +200,58 @@ class HomeScreen extends StatelessWidget {
             );
           },
         );
+      },
+    );
+  }
+
+  Widget userImageSection() {
+    return BlocBuilder<HomeController, HomeScreenState>(
+      buildWhen: (previous, current) {
+        return current is UserHaveARide || current is UserDontHaveARideAnymore;
+      },
+      builder: (context, state) {
+        if (state is UserHaveARide) {
+          return GestureDetector(
+              onTap: () async {
+                showDialog(
+                    context: context,
+                    builder: (context) => RideAlreadyExistsDialog(
+                        title:
+                            "Parece que você já possui a seguinte carona em andamento",
+                        oldRide: state.ride,
+                        oldRideButtonText: "Desistir da carona",
+                        newRideButtonText: "Voltar para carona antiga",
+                        chooseNewRide: () {
+                          if (state.ride.started ?? false) {
+                            BlocProvider.of<RideDashboardController>(context)
+                                .add(SetRide(ride: state.ride, user: user));
+                            Navigator.popAndPushNamed(
+                                context, "/ride_dashboard");
+                          } else if (state.isARequest) {
+                            Navigator.popAndPushNamed(context, "/waiting_room");
+                          } else {
+                            BlocProvider.of<PassengersSelectionController>(
+                                    context)
+                                .add(SetRideData(ride: state.ride));
+                            Navigator.popAndPushNamed(
+                                context, "/passengers_selection");
+                          }
+                        },
+                        chooseOldRide: () {
+                          if (state.isARequest) {
+                            _homeController.add(GiveUpOnRideRequest(
+                                rideId: state.ride.driver.email));
+                          } else {
+                            _homeController.add(GiveUpOnRideCreated());
+                          }
+                          Navigator.pop(context);
+                        }));
+              },
+              child: BlinkingCircleImage(
+                userImage: UserImage(user: user, radius: imgRadius),
+              ));
+        }
+        return UserImage(user: user, radius: imgRadius);
       },
     );
   }

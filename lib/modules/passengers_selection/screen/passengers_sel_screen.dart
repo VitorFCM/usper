@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/passengers_selection/controller/passengers_selection_controller.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/changing_text_widget.dart';
@@ -29,6 +30,8 @@ class PassengersSelScreen extends StatelessWidget {
       listener: (context, state) {
         if (state is RideStartedState) {
           Navigator.popAndPushNamed(context, '/ride_dashboard');
+        } else if (state is RideCanceledState) {
+          Navigator.popUntil(context, ModalRoute.withName('/home'));
         }
       },
       builder: (context, state) {
@@ -54,57 +57,50 @@ class PassengersSelScreen extends StatelessWidget {
     double passSectionHeight = MediaQuery.of(context).size.height * 0.3;
     if (passSectionHeight >= 400) passSectionHeight = 400;
 
-    return BlocListener<PassengersSelectionController,
-            PassengersSelectionState>(
-        listener: (context, state) {
-          if (state is RideCanceledState) {
-            Navigator.popUntil(context, ModalRoute.withName('/home'));
-          }
-        },
-        child: Column(
-          //mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: titleOcupation),
-              child: PageTitle(title: "Seleção de\npassageiros"),
-            ),
-            const SizedBox(height: 30),
-            SizedBox(
-              height: 140,
-              width: MediaQuery.of(context).size.width,
-              child: newPassengersList(context),
-            ),
-            const SizedBox(height: 30),
-            const Text(
-              "Passageiros aprovados",
-              style: TextStyle(color: white, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 15),
-            ConstrainedBox(
-                constraints: BoxConstraints(
-                    maxHeight: passSectionHeight, minHeight: passSectionHeight),
-                child: approvedPassengers(context)),
-            //const Spacer(),
-            Padding(
-              padding: const EdgeInsets.only(top: 30),
-              child: Align(
-                alignment: Alignment.center,
-                child: button("Iniciar carona", Colors.black, buttonWidth + 50,
-                    () => _controller.add(StartRide()), yellow, 10),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 15),
-              child: Align(
-                alignment: Alignment.center,
-                child: button("Cancelar", white, buttonWidth,
-                    () => _controller.add(CancelRide()), Colors.black, 10),
-              ),
-            )
-          ],
-          //),
-        ));
+    return Column(
+      //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: titleOcupation),
+          child: PageTitle(title: "Seleção de\npassageiros"),
+        ),
+        const SizedBox(height: 30),
+        SizedBox(
+          height: 140,
+          width: MediaQuery.of(context).size.width,
+          child: newPassengersList(context),
+        ),
+        const SizedBox(height: 30),
+        const Text(
+          "Passageiros aprovados",
+          style: TextStyle(color: white, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 15),
+        ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: passSectionHeight, minHeight: passSectionHeight),
+            child: approvedPassengers(context)),
+        //const Spacer(),
+        Padding(
+          padding: const EdgeInsets.only(top: 30),
+          child: Align(
+            alignment: Alignment.center,
+            child: button("Iniciar carona", Colors.black, buttonWidth + 50,
+                () => _controller.add(StartRide()), yellow, 10),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 15),
+          child: Align(
+            alignment: Alignment.center,
+            child: button("Cancelar", white, buttonWidth,
+                () => _controller.add(CancelRide()), Colors.black, 10),
+          ),
+        )
+      ],
+      //),
+    );
   }
 
   Widget approvedPassengers(BuildContext context) {

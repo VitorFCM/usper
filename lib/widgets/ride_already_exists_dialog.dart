@@ -8,13 +8,18 @@ class RideAlreadyExistsDialog extends StatelessWidget {
   final RideData oldRide;
   final void Function() chooseOldRide;
   final void Function() chooseNewRide;
+  final String newRideButtonText;
+  final String oldRideButtonText;
 
-  RideAlreadyExistsDialog(
-      {super.key,
-      required this.title,
-      required this.oldRide,
-      required this.chooseOldRide,
-      required this.chooseNewRide});
+  RideAlreadyExistsDialog({
+    super.key,
+    required this.title,
+    required this.oldRide,
+    required this.chooseOldRide,
+    required this.chooseNewRide,
+    this.newRideButtonText = 'Carona nova',
+    this.oldRideButtonText = 'Carona antiga',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -46,15 +51,15 @@ class RideAlreadyExistsDialog extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 30),
                 child: Align(
                   alignment: Alignment.center,
-                  child: button("Carona nova", Colors.black, buttonWidth + 50,
-                      () => chooseNewRide(), yellow, 10),
+                  child: button(newRideButtonText, Colors.black,
+                      buttonWidth + 50, () => chooseNewRide(), yellow, 10),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 15),
                 child: Align(
                   alignment: Alignment.center,
-                  child: button("Carona antiga", white, buttonWidth,
+                  child: button(oldRideButtonText, white, buttonWidth,
                       () => chooseOldRide(), Colors.black, 10),
                 ),
               )
