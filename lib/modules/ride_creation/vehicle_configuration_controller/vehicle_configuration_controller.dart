@@ -16,7 +16,7 @@ class VehicleConfigurationController
     extends Bloc<VehicleConfigurationEvent, VehicleConfigurationState> {
   VehicleConfigurationController(
       {required this.rideCreationController, required this.repositoryService})
-      : super(const SeatsCounterNewValue(0)) {
+      : super(SeatsCounterNewValue(0)) {
     on<SeatsCounterIncreased>(_increaseSeatsCounter);
     on<SeatsCounterDecreased>(_decreaseSeatsCounter);
     on<SetVehicleColor>(_setVehicleColor);
@@ -31,7 +31,7 @@ class VehicleConfigurationController
   RideCreationController rideCreationController;
   RepositoryInterface repositoryService;
 
-  int _seatsCounter = 0;
+  int seatsCounter = 0;
   final int _maxNumberOfSeats =
       4; //In the future, a better implementation shoud be proposed
   Vehicle? vehicle;
@@ -43,23 +43,23 @@ class VehicleConfigurationController
 
   void _increaseSeatsCounter(
       SeatsCounterIncreased event, Emitter<VehicleConfigurationState> emit) {
-    if (_seatsCounter == _maxNumberOfSeats) {
+    if (seatsCounter == _maxNumberOfSeats) {
       emit(VehicleConfigurationStateError(
           "O número máximo de vagas desse veículo é ${_maxNumberOfSeats}"));
     } else {
-      _seatsCounter++;
-      emit(SeatsCounterNewValue(_seatsCounter));
+      seatsCounter++;
+      emit(SeatsCounterNewValue(seatsCounter));
     }
   }
 
   void _decreaseSeatsCounter(
       SeatsCounterDecreased event, Emitter<VehicleConfigurationState> emit) {
-    if (_seatsCounter == 0) {
-      emit(const VehicleConfigurationStateError(
+    if (seatsCounter == 0) {
+      emit(VehicleConfigurationStateError(
           "Não é possível ter um valor negativo de assentos"));
     } else {
-      _seatsCounter--;
-      emit(SeatsCounterNewValue(_seatsCounter));
+      seatsCounter--;
+      emit(SeatsCounterNewValue(seatsCounter));
     }
   }
 
@@ -73,24 +73,25 @@ class VehicleConfigurationController
       VehicleDataReady event, Emitter<VehicleConfigurationState> emit) async {
     UsperUser? driver = event.driver;
 
-    if (_seatsCounter == 0) {
-      emit(const VehicleConfigurationStateError(
+    String? plateCheck = validateBrazilianPlate(event.vehiclePlate);
+
+    if (seatsCounter == 0) {
+      emit(VehicleConfigurationStateError(
           "O número de vagas deve ser aumentado"));
-    } else if (event.vehiclePlate.isEmpty) {
-      emit(const VehicleConfigurationStateError(
-          "É necessário fornecer a placa do veículo"));
+    } else if (plateCheck != null) {
+      emit(VehicleConfigurationStateError(plateCheck));
     } else if (vehicleColorName?.isEmpty ?? true) {
-      emit(const VehicleConfigurationStateError(
+      emit(VehicleConfigurationStateError(
           "É necessário fornecer a cor do veículo"));
     } else if (vehicleModel?.isEmpty ?? true) {
-      emit(const VehicleConfigurationStateError(
+      emit(VehicleConfigurationStateError(
           "É necessário fornecer o modelo do veículo"));
     } else if (driver == null) {
-      emit(const VehicleConfigurationStateError(
+      emit(VehicleConfigurationStateError(
           "Ocorreu um erro com o seu login, por favor feche o aplicativo e tente novamente"));
     } else {
       vehicle = Vehicle(
-          _seatsCounter, vehicleModel!, event.vehiclePlate, vehicleColorName!);
+          seatsCounter, vehicleModel!, event.vehiclePlate, vehicleColorName!);
       await repositoryService.insertVehicle(vehicle!, driver);
       _clearData();
       rideCreationController.add(VehicleRideChosed(vehicle!));
@@ -138,7 +139,7 @@ class VehicleConfigurationController
         : motorcyclesMakers![event.vehicleMaker];
 
     if (makerCode == null) {
-      emit(const VehicleConfigurationStateError(
+      emit(VehicleConfigurationStateError(
           "Não foi possível obter a lista de modelos. Vamos utilizar apenas o fabricante"));
     } else {
       emit(VehicleModelsRetrieved(await getVehiclesModels(
@@ -153,8 +154,23 @@ class VehicleConfigurationController
   }
 
   void _clearData() {
-    _seatsCounter = 0;
+    seatsCounter = 0;
     vehicleColorName = null;
     vehicleModel = null;
+  }
+
+  String? validateBrazilianPlate(String? value) {
+    if (value == null || value.length != 7) {
+      return "É necessário fornecer a placa do veículo";
+    }
+
+    final oldPattern = RegExp(r'^[A-Z]{3}[0-9]{4}$');
+    final mercosulPattern = RegExp(r'^[A-Z]{3}[0-9][A-Z][0-9]{2}$');
+
+    if (!oldPattern.hasMatch(value) && !mercosulPattern.hasMatch(value)) {
+      return "Formato inválido (ex: ABC1234 ou ABC1D23)";
+    }
+
+    return null;
   }
 }

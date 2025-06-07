@@ -1,17 +1,17 @@
 part of 'vehicle_configuration_controller.dart';
 
 sealed class VehicleConfigurationState {
-  const VehicleConfigurationState();
+  VehicleConfigurationState();
 }
 
 final class SeatsCounterNewValue extends VehicleConfigurationState {
-  const SeatsCounterNewValue(this.seats);
+  SeatsCounterNewValue(this.seats);
 
   final int seats;
 }
 
 final class VehicleConfigurationStateError extends VehicleConfigurationState {
-  const VehicleConfigurationStateError(this.errorMessage);
+  VehicleConfigurationStateError(this.errorMessage);
 
   final String errorMessage;
 }
