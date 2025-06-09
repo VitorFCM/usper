@@ -19,13 +19,13 @@ abstract interface class RepositoryInterface {
       final RideData ride, final UsperUser passenger);
   Future<List<MapEntry<bool?, UsperUser>>> fetchAllRideRequests(
       String driverId);
-  Stream<MapEntry<RideRequestsEventType, dynamic>> startRideRequestsStream(
-      String rideId);
+  Future<Stream<MapEntry<RideRequestsEventType, dynamic>>>
+      startRideRequestsStream(String rideId);
   void stopRideRequestsStream();
   Future<void> deleteRideRequest(String driverId, String passengerId);
   Future<void> acceptRideRequest(String driverId, String passengerId);
   Future<void> refuseRideRequest(String driverId, String passengerId);
   Future<String?> getNonRefusedRideRequest(String passengerId);
-  Stream<RideDataEventType> startRideEventsStream(String rideId);
-  void stopRideEventsStream();
+  Future<Stream<RideDataEventType>> startRideEventsStream(String rideId);
+  Future<void> stopRideEventsStream();
 }

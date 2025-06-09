@@ -20,12 +20,12 @@ class SupabaseService implements RepositoryInterface {
       _avaiableRidesStreamController =
       StreamController<MapEntry<RideDataEventType, dynamic>>.broadcast();
 
-  late StreamController<MapEntry<RideRequestsEventType, dynamic>>
+  StreamController<MapEntry<RideRequestsEventType, dynamic>>?
       _rideRequestsStreamController;
-  late RealtimeChannel supabaseRideRequestsChannel;
+  RealtimeChannel? supabaseRideRequestsChannel;
 
-  late StreamController<RideDataEventType> _specificRideStreamController;
-  late RealtimeChannel supabaseSpecificRideChannel;
+  StreamController<RideDataEventType>? _specificRideStreamController;
+  RealtimeChannel? supabaseSpecificRideChannel;
 
   final supabase = Supabase.instance.client;
 
@@ -283,8 +283,10 @@ class SupabaseService implements RepositoryInterface {
   }
 
   @override
-  Stream<MapEntry<RideRequestsEventType, dynamic>> startRideRequestsStream(
-      String rideId) {
+  Future<Stream<MapEntry<RideRequestsEventType, dynamic>>>
+      startRideRequestsStream(String rideId) async {
+    await stopRideRequestsStream();
+
     _rideRequestsStreamController =
         StreamController<MapEntry<RideRequestsEventType, dynamic>>.broadcast();
 
@@ -299,18 +301,18 @@ class SupabaseService implements RepositoryInterface {
                 column: 'driver_email',
                 value: rideId),
             callback: (payload) async {
-              _rideRequestsStreamController
+              _rideRequestsStreamController!
                   .add(await _payloadToStreamRideRequest(payload));
             })
         .subscribe();
 
-    return _rideRequestsStreamController.stream;
+    return _rideRequestsStreamController!.stream;
   }
 
   @override
-  void stopRideRequestsStream() async {
-    await supabaseRideRequestsChannel.unsubscribe();
-    _rideRequestsStreamController.close();
+  Future<void> stopRideRequestsStream() async {
+    await supabaseRideRequestsChannel?.unsubscribe();
+    _rideRequestsStreamController?.close();
   }
 
   Future<MapEntry<RideRequestsEventType, dynamic>> _payloadToStreamRideRequest(
@@ -379,7 +381,9 @@ class SupabaseService implements RepositoryInterface {
   }
 
   @override
-  Stream<RideDataEventType> startRideEventsStream(String rideId) {
+  Future<Stream<RideDataEventType>> startRideEventsStream(String rideId) async {
+    await stopRideEventsStream();
+
     _specificRideStreamController =
         StreamController<RideDataEventType>.broadcast();
 
@@ -396,9 +400,9 @@ class SupabaseService implements RepositoryInterface {
             callback: (payload) async {
               switch (payload.eventType) {
                 case PostgresChangeEvent.update:
-                  _specificRideStreamController.add(RideDataEventType.started);
+                  _specificRideStreamController!.add(RideDataEventType.started);
                 case PostgresChangeEvent.delete:
-                  _specificRideStreamController.add(RideDataEventType.deleted);
+                  _specificRideStreamController!.add(RideDataEventType.deleted);
                 case PostgresChangeEvent.insert:
                 case PostgresChangeEvent.all:
                   break;
@@ -406,12 +410,12 @@ class SupabaseService implements RepositoryInterface {
             })
         .subscribe();
 
-    return _specificRideStreamController.stream;
+    return _specificRideStreamController!.stream;
   }
 
   @override
-  void stopRideEventsStream() async {
-    await supabaseSpecificRideChannel.unsubscribe();
-    _specificRideStreamController.close();
+  Future<void> stopRideEventsStream() async {
+    await supabaseSpecificRideChannel?.unsubscribe();
+    _specificRideStreamController?.close();
   }
 }

@@ -72,8 +72,11 @@ class PassengersSelectionController
     emit(RideCanceledState());
   }
 
-  void _startListeningRideRequests(String rideId) {
-    repositoryService.startRideRequestsStream(rideId).listen((rideDataEvent) {
+  void _startListeningRideRequests(String rideId) async {
+    final stream =
+        await repositoryService.startRideRequestsStream(ride.driver.email);
+
+    stream.listen((rideDataEvent) {
       switch (rideDataEvent.key) {
         case RideRequestsEventType.accepted:
           UsperUser passenger = rideDataEvent.value as UsperUser;

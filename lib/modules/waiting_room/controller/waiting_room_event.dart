@@ -39,3 +39,8 @@ class KeepOldRequest extends WaitingRoomEvent {
 class RideStarted extends WaitingRoomEvent {}
 
 class RideCanceled extends WaitingRoomEvent {}
+
+class PassengerAlreadyWaiting extends WaitingRoomEvent {
+  PassengerAlreadyWaiting({required this.ride});
+  RideData ride;
+}

@@ -30,6 +30,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     on<KeepOldRequest>(_keepOldRequest);
     on<RideStarted>(_rideStarted);
     on<RideCanceled>(_rideCanceled);
+    on<PassengerAlreadyWaiting>(_setRideForPassengerAlreadyWaiting);
   }
 
   RepositoryInterface repositoryService;
@@ -134,10 +135,18 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     emit(RideStartedState());
   }
 
-  void _startListeningRideEvents() {
-    repositoryService
-        .startRideEventsStream(ride.driver.email)
-        .listen((rideDataEvent) {
+  void _setRideForPassengerAlreadyWaiting(
+      PassengerAlreadyWaiting event, Emitter<WaitingRoomState> emit) async {
+    ride = event.ride;
+    await _fetchAcceptedRideRequests(emit);
+    _startListeningRideEvents();
+  }
+
+  void _startListeningRideEvents() async {
+    final rideEventsStream =
+        await repositoryService.startRideEventsStream(ride.driver.email);
+
+    rideEventsStream.listen((rideDataEvent) {
       switch (rideDataEvent) {
         case RideDataEventType.created:
           break;
@@ -148,23 +157,31 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       }
     });
 
-    repositoryService
-        .startRideRequestsStream(ride.driver.email)
-        .listen((rideDataEvent) {
+    final rideRequestsStream =
+        await repositoryService.startRideRequestsStream(ride.driver.email);
+
+    rideRequestsStream.listen((rideDataEvent) {
       switch (rideDataEvent.key) {
         case RideRequestsEventType.accepted:
           add(NewRequestAccepted(passenger: rideDataEvent.value as UsperUser));
+          break;
+
         case RideRequestsEventType.cancelled:
           if (rideDataEvent.value as String != user.email) {
             add(RequestCancelled(
                 passengerEmail: rideDataEvent.value as String));
           }
+          break;
+
         case RideRequestsEventType.refused:
           if (rideDataEvent.value as String == user.email) {
             add(RequestRefused());
           }
+          break;
+
         case RideRequestsEventType.requested:
         // Nothing to do
+          break;
       }
     });
   }

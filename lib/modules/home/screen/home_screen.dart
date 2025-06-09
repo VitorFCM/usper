@@ -7,6 +7,7 @@ import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/modules/passengers_selection/controller/passengers_selection_controller.dart';
 import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
+import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/widgets/avl_ride_card.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/blinking_circle_image.dart';
@@ -228,6 +229,8 @@ class HomeScreen extends StatelessWidget {
                             Navigator.popAndPushNamed(
                                 context, "/ride_dashboard");
                           } else if (state.isARequest) {
+                            BlocProvider.of<WaitingRoomController>(context)
+                                .add(PassengerAlreadyWaiting(ride: state.ride));
                             Navigator.popAndPushNamed(context, "/waiting_room");
                           } else {
                             BlocProvider.of<PassengersSelectionController>(
