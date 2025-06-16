@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/modules/chat/controller/chat_controller.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/home/screen/home_screen.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
@@ -17,6 +18,8 @@ import 'package:usper/modules/ride_dashboard/screen/ride_dashboard_screen.dart';
 import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/modules/waiting_room/screen/waiting_room_screen.dart';
 import 'package:usper/services/authentication/google_auth_supabase_service.dart';
+import 'package:usper/services/cryptography/cryptography_interface.dart';
+import 'package:usper/services/cryptography/encrypt_service.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 import 'package:usper/services/data_repository/supabase_service.dart';
 import 'package:usper/services/map_service/map_interface.dart';
@@ -42,6 +45,7 @@ class Application extends StatelessWidget {
   Widget build(BuildContext context) {
     final RepositoryInterface repositoryService = SupabaseService();
     final MapInterface mapService = MapService();
+    final CryptographyInterface cryptographyService = EncryptService();
 
     return MultiBlocProvider(
         providers: [
@@ -67,6 +71,7 @@ class Application extends StatelessWidget {
                   repositoryService: repositoryService)),
           BlocProvider(
               create: (context) => WaitingRoomController(
+                  cryptographyService: cryptographyService,
                   rideDashboardController:
                       BlocProvider.of<RideDashboardController>(context),
                   repositoryService: repositoryService,
@@ -74,9 +79,13 @@ class Application extends StatelessWidget {
                   homeController: BlocProvider.of<HomeController>(context))),
           BlocProvider(
               create: (context) => PassengersSelectionController(
+                    repositoryService: repositoryService,
+                  )),
+          BlocProvider(
+              create: (context) => ChatController(
                   repositoryService: repositoryService,
-                  rideDashboardController:
-                      BlocProvider.of<RideDashboardController>(context))),
+                  cryptographyService: cryptographyService,
+                  user: BlocProvider.of<LoginController>(context).user!)),
         ],
         child: MaterialApp(
           title: 'Usper',

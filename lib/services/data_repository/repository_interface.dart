@@ -1,5 +1,6 @@
 import 'package:usper/constants/ride_data_event_type.dart';
 import 'package:usper/constants/ride_requests_event_type.dart';
+import 'package:usper/core/classes/class_chat_message.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
@@ -15,8 +16,8 @@ abstract interface class RepositoryInterface {
   Future<Map<String, RideData>> fetchAllAvaiableRides();
   Stream<MapEntry<RideDataEventType, dynamic>> avaiableRidesStream();
   Future<void> updateUser(final UsperUser user);
-  Future<void> insertRideRequest(
-      final RideData ride, final UsperUser passenger);
+  Future<void> insertRideRequest(final RideData ride, final UsperUser passenger,
+      final Map<String, String> passengerKey);
   Future<List<MapEntry<bool?, UsperUser>>> fetchAllRideRequests(
       String driverId);
   Future<Stream<MapEntry<RideRequestsEventType, dynamic>>>
@@ -28,4 +29,12 @@ abstract interface class RepositoryInterface {
   Future<String?> getNonRefusedRideRequest(String passengerId);
   Future<Stream<RideDataEventType>> startRideEventsStream(String rideId);
   Future<void> stopRideEventsStream();
+  Future<List<MapEntry<UsperUser, Map<String, String>>>>
+      fetchAcceptedRideRequests(String driverId);
+  Future<void> updateRideRequestChatKey(
+      String driverId, String passengerId, String encyptedChatKey);
+  Future<String?> fetchChatKey(String driverId, String passengerId);
+  Future<Stream<ChatMessage>> startChatStream(String rideId);
+  Future<void> stopChatStream();
+  Future<void> insertMessage(ChatMessage chatMessage);
 }

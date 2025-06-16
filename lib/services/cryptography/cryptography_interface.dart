@@ -5,4 +5,5 @@ abstract interface class CryptographyInterface {
   void decryptChatKeyFromDriver(String encryptedChatKey);
   String encryptMessage(String message);
   String decryptMessage(String encryptedJson);
+  void deletePublicKey();
 }

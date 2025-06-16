@@ -1,0 +1,1 @@
+class ChatKeyNotInitialized implements Exception {}

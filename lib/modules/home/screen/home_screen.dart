@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
+import 'package:usper/modules/chat/controller/chat_controller.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/login/controller/login_controller.dart';
 import 'package:usper/modules/passengers_selection/controller/passengers_selection_controller.dart';

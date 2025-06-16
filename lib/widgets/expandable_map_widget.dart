@@ -22,7 +22,7 @@ class ExpandableMapWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(17),
       child: Container(
         width: MediaQuery.of(context).size.width,
         height: 200,

@@ -5,6 +5,7 @@ import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
+import 'package:usper/services/cryptography/cryptography_interface.dart';
 import 'package:usper/services/data_repository/repository_exceptions.dart';
 import 'package:usper/services/data_repository/repository_interface.dart';
 
@@ -14,6 +15,7 @@ part 'waiting_room_state.dart';
 class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
   WaitingRoomController(
       {required this.repositoryService,
+      required this.cryptographyService,
       required this.user,
       required this.homeController,
       required this.rideDashboardController})
@@ -34,6 +36,7 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
   }
 
   RepositoryInterface repositoryService;
+  CryptographyInterface cryptographyService;
   UsperUser user;
   late RideData ride;
   Map<String, UsperUser> acceptedRideRequests = {};
@@ -45,7 +48,8 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
     emit(Loading());
 
     try {
-      await repositoryService.insertRideRequest(event.ride, user);
+      await repositoryService.insertRideRequest(
+          event.ride, user, cryptographyService.getPublicKey());
       ride = event.ride;
       emit(RideRequestCreatedState(ride: ride));
       await _fetchAcceptedRideRequests(emit);
@@ -66,10 +70,13 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
       Emitter<WaitingRoomState> emit) async {
     emit(Loading());
 
+    cryptographyService.deletePublicKey();
+
     try {
       await repositoryService.deleteRideRequest(
           event.oldRide.driver.email, user.email);
-      await repositoryService.insertRideRequest(event.newRide, user);
+      await repositoryService.insertRideRequest(
+          event.newRide, user, cryptographyService.getPublicKey());
       ride = event.newRide;
       emit(RideRequestCreatedState(ride: ride));
       await _fetchAcceptedRideRequests(emit);
@@ -180,7 +187,8 @@ class WaitingRoomController extends Bloc<WaitingRoomEvent, WaitingRoomState> {
           break;
 
         case RideRequestsEventType.requested:
-        // Nothing to do
+          break;
+        case RideRequestsEventType.chatKeyProvided:
           break;
       }
     });

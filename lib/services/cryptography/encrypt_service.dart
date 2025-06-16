@@ -10,6 +10,7 @@ import 'package:pointycastle/key_generators/api.dart';
 import 'package:pointycastle/key_generators/rsa_key_generator.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/random/fortuna_random.dart';
+import 'package:usper/services/cryptography/cryptography_exceptions.dart';
 import 'package:usper/services/cryptography/cryptography_interface.dart';
 
 class EncryptService implements CryptographyInterface {
@@ -38,7 +39,7 @@ class EncryptService implements CryptographyInterface {
 
   @override
   String encryptChatKeyForPassenger(Map<String, String> passengerPublicKey) {
-    if (_chatKey == null) throw Exception("Chat key not initialized.");
+    if (_chatKey == null) throw ChatKeyNotInitialized();
 
     final oaep = OAEPEncoding(RSAEngine())
       ..init(
@@ -64,7 +65,7 @@ class EncryptService implements CryptographyInterface {
 
   @override
   String encryptMessage(String message) {
-    if (_chatKey == null) throw Exception("Chat key not initialized.");
+    if (_chatKey == null) throw ChatKeyNotInitialized();
 
     final iv = encrypt.IV.fromSecureRandom(16);
 
@@ -81,13 +82,18 @@ class EncryptService implements CryptographyInterface {
 
   @override
   String decryptMessage(String encryptedJson) {
-    if (_chatKey == null) throw Exception("Chat key not initialized.");
+    if (_chatKey == null) throw ChatKeyNotInitialized();
     final parsed = jsonDecode(encryptedJson);
     final iv = encrypt.IV.fromBase64(parsed['iv']);
     final encryptedMessage = parsed['message'];
 
     final encrypter = encrypt.Encrypter(encrypt.AES(_chatKey!));
     return encrypter.decrypt64(encryptedMessage, iv: iv);
+  }
+
+  @override
+  void deletePublicKey() {
+    _publicKey = null;
   }
 
   AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey> _generateRSAKeyPair() {

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/core/classes/class_ride_data.dart';
+import 'package:usper/modules/chat/controller/chat_controller.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/passengers_selection/controller/passengers_selection_controller.dart';
+import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
 import 'package:usper/widgets/base_screen.dart';
 import 'package:usper/widgets/changing_text_widget.dart';
 import 'package:usper/widgets/loading_widget.dart';
@@ -86,8 +89,13 @@ class PassengersSelScreen extends StatelessWidget {
           padding: const EdgeInsets.only(top: 30),
           child: Align(
             alignment: Alignment.center,
-            child: button("Iniciar carona", Colors.black, buttonWidth + 50,
-                () => _controller.add(StartRide()), yellow, 10),
+            child: button("Iniciar carona", Colors.black, buttonWidth + 50, () {
+              _controller.add(StartRide());
+
+              RideData ride = _controller.ride;
+              BlocProvider.of<RideDashboardController>(context)
+                  .add(SetRide(ride: ride, user: ride.driver));
+            }, yellow, 10),
           ),
         ),
         Padding(

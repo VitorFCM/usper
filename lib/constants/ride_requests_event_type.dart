@@ -1,1 +1,7 @@
-enum RideRequestsEventType { accepted, refused, requested, cancelled }
+enum RideRequestsEventType {
+  accepted,
+  refused,
+  requested,
+  cancelled,
+  chatKeyProvided
+}

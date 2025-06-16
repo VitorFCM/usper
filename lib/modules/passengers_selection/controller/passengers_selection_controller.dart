@@ -13,8 +13,7 @@ class PassengersSelectionController
   Map<String, UsperUser> approved = {};
   Map<String, UsperUser> requests = {};
 
-  PassengersSelectionController(
-      {required this.repositoryService, required this.rideDashboardController})
+  PassengersSelectionController({required this.repositoryService})
       : super(InitialPassengersSelectionState()) {
     on<SetRideData>(_setRideData);
     on<RequestAccepted>(_acceptPassenger);
@@ -28,7 +27,6 @@ class PassengersSelectionController
   }
 
   RepositoryInterface repositoryService;
-  RideDashboardController rideDashboardController;
   late RideData ride;
 
   void _setRideData(
@@ -98,6 +96,8 @@ class PassengersSelectionController
           requests.remove(passengerEmail);
           approved.remove(passengerEmail);
           break;
+        case RideRequestsEventType.chatKeyProvided:
+          break;
       }
     });
   }
@@ -106,7 +106,6 @@ class PassengersSelectionController
     emit(Loading());
     _stopListeningRideRequests();
     repositoryService.startRide(ride.driver.email);
-    rideDashboardController.add(SetRide(ride: ride, user: ride.driver));
     emit(RideStartedState());
   }
 

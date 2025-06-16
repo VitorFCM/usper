@@ -6,3 +6,7 @@ class PassengerAlreadyRequestedARideException implements Exception {
 class RideWasAlreadyDeleted implements Exception {}
 
 class DriverAlreadyHaveARideException implements Exception {}
+
+class UnknowRideRequestEvent implements Exception {}
+
+class CouldntFindRideRequest implements Exception {}

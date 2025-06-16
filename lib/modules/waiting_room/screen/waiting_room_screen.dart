@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/modules/chat/controller/chat_controller.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/waiting_room/controller/waiting_room_controller.dart';
 import 'package:usper/widgets/base_screen.dart';

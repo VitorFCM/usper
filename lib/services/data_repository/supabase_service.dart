@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:usper/constants/ride_data_event_type.dart';
 import 'package:usper/constants/datatbase_tables.dart';
 import 'package:usper/constants/ride_requests_event_type.dart';
+import 'package:usper/core/classes/class_chat_message.dart';
 import 'package:usper/core/classes/class_ride_data.dart';
 import 'package:usper/core/classes/class_usper_user.dart';
 import 'package:usper/core/classes/class_vehicle.dart';
@@ -26,6 +27,9 @@ class SupabaseService implements RepositoryInterface {
 
   StreamController<RideDataEventType>? _specificRideStreamController;
   RealtimeChannel? supabaseSpecificRideChannel;
+
+  StreamController<ChatMessage>? _chatStreamController;
+  RealtimeChannel? supabaseChatChannel;
 
   final supabase = Supabase.instance.client;
 
@@ -249,7 +253,8 @@ class SupabaseService implements RepositoryInterface {
   }
 
   @override
-  Future<void> insertRideRequest(RideData ride, UsperUser passenger) async {
+  Future<void> insertRideRequest(RideData ride, UsperUser passenger,
+      Map<String, String> passengerKey) async {
     List<Map<String, dynamic>> rawList = await fetchData(
         DatabaseTables.ride_requests,
         {"passenger_email": passenger.email, "!accepted": false});
@@ -262,7 +267,8 @@ class SupabaseService implements RepositoryInterface {
     try {
       await insertData(DatabaseTables.ride_requests, {
         "driver_email": ride.driver.email,
-        "passenger_email": passenger.email
+        "passenger_email": passenger.email,
+        "passenger_key": passengerKey
       });
     } on PostgrestException catch (e) {
       if (e.code == null) {
@@ -319,13 +325,24 @@ class SupabaseService implements RepositoryInterface {
       PostgresChangePayload payload) async {
     switch (payload.eventType) {
       case PostgresChangeEvent.update:
-        if (payload.newRecord["accepted"]) {
-          return MapEntry(RideRequestsEventType.accepted,
-              await _fetchUser(payload.newRecord["passenger_email"]));
-        } else {
+        print("-------------------------");
+        print(payload);
+        print("-------------------------");
+        if (!payload.newRecord["accepted"]) {
           return MapEntry(RideRequestsEventType.refused,
               payload.newRecord["passenger_email"]);
+        } else if (payload.oldRecord["accepted"] == null &&
+            payload.newRecord["accepted"]) {
+          return MapEntry(RideRequestsEventType.accepted,
+              await _fetchUser(payload.newRecord["passenger_email"]));
+        } else if (payload.oldRecord["chat_key"] == null &&
+            payload.newRecord["chat_key"] != null) {
+          return MapEntry(
+              RideRequestsEventType.chatKeyProvided,
+              MapEntry(payload.newRecord["passenger_email"],
+                  payload.newRecord["chat_key"]));
         }
+        throw UnknowRideRequestEvent;
       case PostgresChangeEvent.delete:
         return MapEntry(RideRequestsEventType.cancelled,
             payload.oldRecord["passenger_email"]);
@@ -417,5 +434,93 @@ class SupabaseService implements RepositoryInterface {
   Future<void> stopRideEventsStream() async {
     await supabaseSpecificRideChannel?.unsubscribe();
     _specificRideStreamController?.close();
+  }
+
+  @override
+  Future<List<MapEntry<UsperUser, Map<String, String>>>>
+      fetchAcceptedRideRequests(String driverId) async {
+    List<Map<String, dynamic>> rawList = await fetchData(
+      DatabaseTables.ride_requests,
+      {"driver_email": driverId, "accepted": true},
+    );
+
+    return [
+      for (var record in rawList)
+        MapEntry(
+          await _fetchUser(record["passenger_email"]),
+          (record["passenger_key"] as Map<String, dynamic>)
+              .map((k, v) => MapEntry(k, v.toString())),
+        )
+    ];
+  }
+
+  @override
+  Future<void> updateRideRequestChatKey(
+      String driverId, String passengerId, String encyptedChatKey) async {
+    await updateData(
+        DatabaseTables.ride_requests,
+        {"chat_key": encyptedChatKey},
+        {"driver_email": driverId, "passenger_email": passengerId});
+  }
+
+  @override
+  Future<String?> fetchChatKey(String driverId, String passengerId) async {
+    List<Map<String, dynamic>> rawList = await fetchData(
+      DatabaseTables.ride_requests,
+      {
+        "driver_email": driverId,
+        "passenger_email": passengerId,
+        "accepted": true
+      },
+    );
+
+    if (rawList.isEmpty) {
+      throw CouldntFindRideRequest();
+    }
+    return rawList[0]["chat_key"];
+  }
+
+  @override
+  Future<Stream<ChatMessage>> startChatStream(String rideId) async {
+    await stopChatStream();
+
+    _chatStreamController = StreamController<ChatMessage>.broadcast();
+
+    supabaseChatChannel = supabase
+        .channel("public:${DatabaseTables.chat.name}")
+        .onPostgresChanges(
+            event: PostgresChangeEvent.insert,
+            schema: 'public',
+            table: DatabaseTables.chat.name,
+            filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'ride',
+                value: rideId),
+            callback: (payload) => _chatStreamController!.add(
+                  ChatMessage(
+                      messageContent: payload.newRecord["message"],
+                      timestamp:
+                          DateTime.parse(payload.newRecord["created_at"]),
+                      userId: payload.newRecord["user"],
+                      rideId: payload.newRecord["ride"]),
+                ))
+        .subscribe();
+
+    return _chatStreamController!.stream;
+  }
+
+  @override
+  Future<void> stopChatStream() async {
+    await supabaseChatChannel?.unsubscribe();
+    _chatStreamController?.close();
+  }
+
+  @override
+  Future<void> insertMessage(ChatMessage chatMessage) async {
+    await insertData(DatabaseTables.chat, {
+      "message": chatMessage.messageContent,
+      "user": chatMessage.userId,
+      "ride": chatMessage.rideId
+    });
   }
 }

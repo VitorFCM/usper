@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:usper/constants/colors_constants.dart';
+import 'package:usper/modules/chat/controller/chat_controller.dart';
+import 'package:usper/modules/chat/screen/chat_screen.dart';
 import 'package:usper/modules/home/controller/home_controller.dart';
 import 'package:usper/modules/ride_dashboard/controller/ride_dashboard_controller.dart';
 import 'package:usper/widgets/base_screen.dart';
@@ -9,15 +11,32 @@ import 'package:usper/widgets/expandable_map_widget.dart';
 import 'package:usper/widgets/loading_widget.dart';
 import 'package:usper/widgets/page_title.dart';
 import 'package:usper/widgets/ride_info_card.dart';
+import 'package:usper/widgets/user_image.dart';
 
-class RideDashboardScreen extends StatelessWidget {
+class RideDashboardScreen extends StatefulWidget {
+  @override
+  State<RideDashboardScreen> createState() => _RideDashboardScreenState();
+}
+
+class _RideDashboardScreenState extends State<RideDashboardScreen> {
   late RideDashboardController _rideDashboardController;
+  bool _isInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      _rideDashboardController =
+          BlocProvider.of<RideDashboardController>(context);
+      BlocProvider.of<ChatController>(context)
+          .add(SetRideForChat(ride: _rideDashboardController.ride));
+      _isInitialized = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     double titleOcupation = MediaQuery.of(context).size.width * 0.68;
-    _rideDashboardController =
-        BlocProvider.of<RideDashboardController>(context);
 
     return BaseScreen(
         child: BlocConsumer<RideDashboardController, RideDashboardState>(
@@ -54,11 +73,84 @@ class RideDashboardScreen extends StatelessWidget {
               destination: _rideDashboardController.ride.destCoord,
               routePoints: _rideDashboardController.ride.route ?? [],
             ),
+            const SizedBox(height: 20),
+            chatSection(context),
+            const SizedBox(height: 20),
             buttonSection(context),
           ],
         );
       },
     ));
+  }
+
+  Widget chatSection(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => ChatScreen(),
+        );
+      },
+      child: Container(
+        height: 65,
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(17),
+          color: lighterBlue,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        child: Row(
+          children: [
+            const Text(
+              "Chat",
+              style: TextStyle(color: white, fontSize: 20),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(17),
+                  color: yellow,
+                ),
+                padding: const EdgeInsets.all(5),
+                child: BlocBuilder<ChatController, ChatState>(
+                  buildWhen: (previous, current) {
+                    return current is NewMessageState;
+                  },
+                  builder: (context, state) {
+                    if (state is NewMessageState) {
+                      return Row(
+                        children: [
+                          UserImage(
+                            user: state.user,
+                            radius: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              state.chatMessage.messageContent,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )
+                        ],
+                      );
+                    } else {
+                      return Container(
+                        height: 40,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text("Sem mensagens ainda"),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget buttonSection(BuildContext context) {
